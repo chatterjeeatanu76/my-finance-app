@@ -1,18 +1,24 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, User, X,
+  Home, BarChart3, User, X, Trash2, Loader2
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
   Tooltip, LineChart, Line, CartesianGrid, XAxis,
 } from 'recharts'
 
+// Supabase client
+const supabase = createClient(
+  'https://soubaetsvxxuubnruuyd.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvdWJhZXRzdnh4dXVibnJ1dXlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzQ1NzAsImV4cCI6MjA5NTAxMDU3MH0.oB4XXGrYzZPoyoT6ioxJh5KKz8ULnSyum2SvmpjzdJk'
+)
+
 export default function FinanceApp() {
-  const [transactions, setTransactions] = useState([
-    { id: 1, title: 'Salary', amount: 50000, type: 'income', category: 'Salary', date: '2026-05-01' },
-    { id: 2, title: 'Groceries', amount: 2500, type: 'expense', category: 'Food', date: '2026-05-05' },
-  ])
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
   const [type, setType] = useState('expense')
@@ -30,24 +36,71 @@ export default function FinanceApp() {
     company: 'Freelance Designer',
   })
 
-  const totalIncome = useMemo(() => transactions.filter(i => i.type === 'income').reduce((s, i) => s + i.amount, 0), [transactions])
-  const totalExpense = useMemo(() => transactions.filter(i => i.type === 'expense').reduce((s, i) => s + i.amount, 0), [transactions])
+  // Fetch transactions from Supabase on load
+  useEffect(() => {
+    fetchTransactions()
+  }, [])
+
+  const fetchTransactions = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) {
+      console.error('Error fetching:', error)
+    } else {
+      setTransactions(data)
+    }
+    setLoading(false)
+  }
+
+  const addTransaction = async () => {
+    if (!title || !amount || !date) return
+    setSaving(true)
+    const newTransaction = { title, amount: Number(amount), type, category, date }
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert([newTransaction])
+      .select()
+    if (error) {
+      console.error('Error adding:', error)
+    } else {
+      setTransactions([data[0], ...transactions])
+      setTitle('')
+      setAmount('')
+      setDate(new Date().toISOString().split('T')[0])
+      setCategory('Food')
+    }
+    setSaving(false)
+  }
+
+  const deleteTransaction = async (id) => {
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+    if (error) {
+      console.error('Error deleting:', error)
+    } else {
+      setTransactions(transactions.filter(t => t.id !== id))
+    }
+  }
+
+  const totalIncome = useMemo(() => transactions.filter(i => i.type === 'income').reduce((s, i) => s + Number(i.amount), 0), [transactions])
+  const totalExpense = useMemo(() => transactions.filter(i => i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0), [transactions])
   const balance = totalIncome - totalExpense
   const expensePercentage = totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0
   const incomePercentage = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0
   const chartData = [{ name: 'Income', value: totalIncome }, { name: 'Expense', value: totalExpense }]
-  const monthlyData = transactions.map(i => ({ name: i.title, amount: i.amount, type: i.type }))
+  const monthlyData = transactions.map(i => ({ name: i.title, amount: Number(i.amount), type: i.type }))
   const COLORS = ['#22c55e', '#ef4444']
-
-  const addTransaction = () => {
-    if (!title || !amount || !date) return
-    setTransactions([{ id: Date.now(), title, amount: Number(amount), type, category, date }, ...transactions])
-    setTitle(''); setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food')
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-zinc-900 text-white p-4 md:p-10">
       <div className="max-w-7xl mx-auto pb-28 md:pb-10">
+
+        {/* Header */}
         <div className="sticky top-0 z-50 backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[32px] px-6 py-5 mb-10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
@@ -58,7 +111,7 @@ export default function FinanceApp() {
               <Wallet size={22} /><span className="font-medium">Personal Finance</span>
             </div>
             <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
-              {['home','reports','profile'].map(page => (
+              {['home', 'reports', 'profile'].map(page => (
                 <button key={page} onClick={() => setActivePage(page)}
                   className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.2)]' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
                   {page}
@@ -68,6 +121,7 @@ export default function FinanceApp() {
           </div>
         </div>
 
+        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {[
             { label: 'Total Balance', value: `₹ ${balance.toLocaleString()}`, icon: <Wallet />, color: '' },
@@ -81,12 +135,14 @@ export default function FinanceApp() {
           ))}
         </div>
 
+        {/* Home Page */}
         {activePage === 'home' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Add Transaction Form */}
             <div className="lg:col-span-1 bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-6 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)] h-fit sticky top-6">
               <div className="flex items-center gap-2 mb-6"><Plus /><h2 className="text-2xl font-semibold">Add Transaction</h2></div>
               <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
-                {['expense','income'].map(t => (
+                {['expense', 'income'].map(t => (
                   <button key={t} onClick={() => setType(t)} className={`flex-1 py-3 rounded-2xl font-medium transition-all capitalize ${type === t ? (t === 'expense' ? 'bg-red-500 text-white' : 'bg-green-500 text-white') : 'text-zinc-400'}`}>{t}</button>
                 ))}
               </div>
@@ -95,25 +151,49 @@ export default function FinanceApp() {
                 <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Transaction title" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none" />
                 <input value={amount} onChange={e => setAmount(e.target.value)} type="number" placeholder="Amount" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none" />
                 <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none">
-                  {['Food','Shopping','Travel','Bills','Entertainment','Salary'].map(c => <option key={c}>{c}</option>)}
+                  {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary'].map(c => <option key={c}>{c}</option>)}
                 </select>
-                <button onClick={addTransaction} className="w-full bg-gradient-to-r from-white to-zinc-300 text-black py-4 rounded-2xl font-bold">Add Transaction</button>
+                <button onClick={addTransaction} disabled={saving}
+                  className="w-full bg-gradient-to-r from-white to-zinc-300 text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60">
+                  {saving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : 'Add Transaction'}
+                </button>
               </div>
             </div>
+
+            {/* Transactions List */}
             <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
               <h2 className="text-2xl font-semibold mb-6">Recent Transactions</h2>
-              <div className="space-y-4">
-                {transactions.map(item => (
-                  <div key={item.id} className="flex items-center justify-between bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5">
-                    <div><h3 className="font-semibold text-lg">{item.title}</h3><p className="text-sm text-zinc-400">{item.date} • {item.category}</p></div>
-                    <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>{item.type === 'income' ? '+' : '-'}₹ {item.amount}</p>
-                  </div>
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 size={32} className="animate-spin text-zinc-400" />
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-20 text-zinc-500">No transactions yet. Add one!</div>
+              ) : (
+                <div className="space-y-4">
+                  {transactions.map(item => (
+                    <div key={item.id} className="flex items-center justify-between bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5">
+                      <div>
+                        <h3 className="font-semibold text-lg">{item.title}</h3>
+                        <p className="text-sm text-zinc-400">{item.date} • {item.category}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                          {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
+                        </p>
+                        <button onClick={() => deleteTransaction(item.id)} className="text-zinc-600 hover:text-red-400 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
+        {/* Reports Page */}
         {activePage === 'reports' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -134,6 +214,7 @@ export default function FinanceApp() {
                   ))}
                 </div>
               </div>
+
               {reportView === 'charts' ? (
                 <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl h-[420px]">
                   <div className="flex items-center justify-between mb-6">
@@ -152,11 +233,13 @@ export default function FinanceApp() {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead><tr className="border-b border-white/10 text-zinc-400">{['Title','Date','Category','Amount'].map(h => <th key={h} className="pb-4">{h}</th>)}</tr></thead>
+                      <thead><tr className="border-b border-white/10 text-zinc-400">{['Title', 'Date', 'Category', 'Amount'].map(h => <th key={h} className="pb-4">{h}</th>)}</tr></thead>
                       <tbody>{transactions.map(item => (
                         <tr key={item.id} className="border-b border-white/5">
-                          <td className="py-4">{item.title}</td><td className="py-4">{item.date}</td><td className="py-4">{item.category}</td>
-                          <td className={`py-4 font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>₹ {item.amount}</td>
+                          <td className="py-4">{item.title}</td>
+                          <td className="py-4">{item.date}</td>
+                          <td className="py-4">{item.category}</td>
+                          <td className={`py-4 font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>₹ {Number(item.amount).toLocaleString()}</td>
                         </tr>
                       ))}</tbody>
                     </table>
@@ -164,6 +247,7 @@ export default function FinanceApp() {
                 </div>
               )}
             </div>
+
             <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl h-[400px]">
               <h2 className="text-2xl font-semibold mb-6">Income & Expense Trends</h2>
               <ResponsiveContainer width="100%" height="85%">
@@ -173,6 +257,7 @@ export default function FinanceApp() {
           </div>
         )}
 
+        {/* Profile Page */}
         {activePage === 'profile' && (
           <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-8">
@@ -194,6 +279,7 @@ export default function FinanceApp() {
           </div>
         )}
 
+        {/* Mobile Bottom Nav */}
         <div className="fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
           <div className="flex items-center justify-between">
             {[{ page: 'home', icon: <Home size={20} />, label: 'Home' }, { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' }, { page: 'profile', icon: <User size={20} />, label: 'Profile' }].map(({ page, icon, label }) => (
@@ -201,6 +287,7 @@ export default function FinanceApp() {
             ))}
           </div>
         </div>
+
       </div>
     </div>
   )
