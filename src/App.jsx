@@ -108,17 +108,17 @@ export default function FinanceApp() {
   }
 
   const addTransaction = async () => {
-    if (!title.trim() || !amount || !date) {
+    if (!amount || !date) {
       showToast('error', 'Please fill in all fields')
       return
     }
     setSaving(true)
     try {
-      const newTransaction = { title: title.trim(), amount: Number(amount), type, category, date }
+      const newTransaction = { title: category, amount: Number(amount), type, category, date }
       const { data, error } = await supabase.from('transactions').insert([newTransaction]).select()
       if (error) throw error
       setTransactions(prev => [data[0], ...prev])
-      setTitle(''); setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food')
+      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food')
       showToast('success', 'Transaction saved!')
       // Reset dismissed if new expense might trigger alert
       if (type === 'expense') setBudgetDismissed(false)
@@ -303,13 +303,12 @@ export default function FinanceApp() {
               </div>
               <div className="space-y-4">
                 <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white" />
-                <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Transaction title" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500" />
-                <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="Amount (₹)" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500" />
                 <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
                   {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Other'].map(c => (
                     <option key={c} className="bg-zinc-800">{c}</option>
                   ))}
                 </select>
+                <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="Amount (₹)" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500" />
                 <button onClick={addTransaction} disabled={saving}
                   className="w-full bg-gradient-to-r from-white to-zinc-300 text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity">
                   {saving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : '+ Add Transaction'}
