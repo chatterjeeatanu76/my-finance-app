@@ -210,10 +210,7 @@ export default function FinanceApp() {
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
               <p className="text-zinc-400 mt-2">Track your income and expenses smartly.</p>
             </div>
-            <div className="hidden lg:flex items-center gap-3 bg-white/5 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10">
-              <Wallet size={22} /><span className="font-medium">Personal Finance</span>
-            </div>
-            <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
+<div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
               {['home', 'reports', 'profile'].map(page => (
                 <button key={page} onClick={() => setActivePage(page)}
                   className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
@@ -249,13 +246,20 @@ export default function FinanceApp() {
                     : 'Monthly Budget'}
                 </span>
               </div>
-              <span className={`text-sm font-bold ${
-                currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400'
-                : currentMonthExpense >= BUDGET_LIMIT * 0.8 ? 'text-yellow-400'
-                : 'text-zinc-400'
-              }`}>
-                ₹ {currentMonthExpense.toLocaleString()} / ₹ {BUDGET_LIMIT.toLocaleString()}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-bold ${
+                  currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400'
+                  : currentMonthExpense >= BUDGET_LIMIT * 0.8 ? 'text-yellow-400'
+                  : 'text-zinc-400'
+                }`}>
+                  ₹ {currentMonthExpense.toLocaleString()} / ₹ {BUDGET_LIMIT.toLocaleString()}
+                </span>
+                {currentMonthExpense >= BUDGET_LIMIT && (
+                  <button onClick={dismissBudgetAlert} className="text-red-400 hover:text-red-200 transition-colors">
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="w-full bg-zinc-800 rounded-full h-3">
               <div
