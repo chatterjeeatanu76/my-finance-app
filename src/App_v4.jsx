@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, User, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check
+  Home, BarChart3, User, X, Trash2, Loader2, AlertCircle, CheckCircle, Bell, BellOff
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
@@ -30,8 +30,6 @@ export default function FinanceApp() {
   const [category, setCategory] = useState('Food')
   const [flatNo, setFlatNo] = useState('')
   const [otherCategory, setOtherCategory] = useState('')
-  const [editingId, setEditingId] = useState(null)
-  const [editFields, setEditFields] = useState({})
   const flatNumbers = [
     'Flat-101',
     'Flat-102',
@@ -189,28 +187,6 @@ export default function FinanceApp() {
       showToast('error', 'Failed to save: ' + error.message)
     } finally {
       setSaving(false)
-    }
-  }
-
-  const editTransaction = (item) => {
-    setEditingId(item.id)
-    setEditFields({ title: item.title, amount: item.amount, category: item.category, date: item.date })
-  }
-
-  const saveEdit = async () => {
-    if (!editFields.amount || !editFields.date) return
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .update({ title: editFields.category, amount: Number(editFields.amount), category: editFields.category, date: editFields.date })
-        .eq('id', editingId)
-      if (error) throw error
-      setTransactions(prev => prev.map(t => t.id === editingId ? { ...t, ...editFields, amount: Number(editFields.amount), title: editFields.category } : t))
-      setEditingId(null)
-      setEditFields({})
-      showToast('success', 'Transaction updated!')
-    } catch (error) {
-      showToast('error', 'Failed to update: ' + error.message)
     }
   }
 
@@ -382,8 +358,8 @@ export default function FinanceApp() {
 
         {/* Home Page */}
         {activePage === 'home' && (
-          <div className="flex flex-col gap-8">
-            <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-6 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1 bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-6 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)] h-fit sticky top-6">
               <div className="flex items-center gap-2 mb-6"><Plus /><h2 className="text-2xl font-semibold">Add Transaction</h2></div>
               <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
                 {['expense', 'income'].map(t => (
@@ -422,7 +398,7 @@ export default function FinanceApp() {
               </div>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
+            <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
@@ -442,53 +418,19 @@ export default function FinanceApp() {
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
                   {transactions.map(item => (
-                    <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
-                      {editingId === item.id ? (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <div>
-                              <p className="text-xs text-zinc-500 mb-1">Date</p>
-                              <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
-                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white" />
-                            </div>
-                            <div>
-                              <p className="text-xs text-zinc-500 mb-1">Category</p>
-                              <select value={editFields.category} onChange={e => setEditFields({...editFields, category: e.target.value})}
-                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white">
-                                {['Food','Shopping','Travel','Bills','Electricity Bill','Rent','Water Bill','Watchman Salary','Garbage','Security Salary','Maintenance Cost','Miscellaneous','Salary','Health','Education','Others'].map(c => <option key={c}>{c}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <p className="text-xs text-zinc-500 mb-1">Amount (₹)</p>
-                              <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})}
-                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white" />
-                            </div>
-                            <div className="flex items-end gap-2">
-                              <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                <Check size={14} /> Save
-                              </button>
-                              <button onClick={() => setEditingId(null)} className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                <X size={14} /> Cancel
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-lg">{item.title}</h3>
-                            <p className="text-sm text-zinc-400">{item.date} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}</p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                              {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
-                            </p>
-                            <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors p-1">
-                              <Pencil size={18} />
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                    <div key={item.id} className="flex items-center justify-between bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
+                      <div>
+                        <h3 className="font-semibold text-lg">{item.title}</h3>
+                        <p className="text-sm text-zinc-400">{item.date} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                          {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
+                        </p>
+                        <button onClick={() => deleteTransaction(item.id)} className="text-zinc-600 hover:text-red-400 transition-colors p-1">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
