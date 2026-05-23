@@ -376,7 +376,7 @@ export default function FinanceApp() {
         {activePage === 'home' && (
           <div className="flex flex-col gap-8">
             <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-3 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-              <div className="flex items-center gap-2 mb-6"><Plus /><h2 className="text-2xl font-semibold">Add Transaction</h2></div>
+              <div className="flex items-center gap-2 mb-6"><Plus /><h3 className="text-2xl font-semibold">Add Transaction</h3></div>
               <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
                 {['expense', 'income'].map(t => (
                   <button key={t} onClick={() => setType(t)}
@@ -428,11 +428,11 @@ export default function FinanceApp() {
               )}
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
+            <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-3 border border-white/10 shadow-2xl">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold">Recent Transactions</h2>
+                <h2 className="text-2x font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
-                  <Loader2 size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                  <Loader2 size={14} className={loading ? 'animate-spin' : ''} />  Refresh
                 </button>
               </div>
               {loading ? (
