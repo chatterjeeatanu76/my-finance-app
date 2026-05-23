@@ -281,7 +281,7 @@ export default function FinanceApp() {
       <div className="max-w-7xl mx-auto pb-28 md:pb-10">
 
         {/* Header */}
-        <div className="sticky top-0 z-50 backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[32px] px-6 py-5 mb-10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+        <div className="sticky top-0 z-50 backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[32px] px-6 py-5 mb-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
@@ -356,7 +356,7 @@ export default function FinanceApp() {
         )}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-10">
+        <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-5">
           {[
             { label: 'Balance', value: `₹ ${balance.toLocaleString()}`, icon: <Wallet size={16} />, color: '' },
             { label: 'Income', value: `₹ ${totalIncome.toLocaleString()}`, icon: <TrendingUp size={16} className="text-green-400" />, color: 'text-green-400' },
@@ -376,7 +376,7 @@ export default function FinanceApp() {
         {activePage === 'home' && (
           <div className="flex flex-col gap-8">
             <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-3 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-              <div className="flex items-center gap-2 mb-6"><Plus /><h3 className="text-2xl font-semibold">Add Transaction</h3></div>
+              <div className="flex items-center gap-2 mb-6"><Plus /><h3 className="text-2x font-semibold">Add Transaction</h3></div>
               <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
                 {['expense', 'income'].map(t => (
                   <button key={t} onClick={() => setType(t)}
@@ -432,7 +432,7 @@ export default function FinanceApp() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2x font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
-                  <Loader2 size={14} className={loading ? 'animate-spin' : ''} />  Refresh
+                  <Loader2 size={12} className={loading ? 'animate-spin' : ''} />  Refresh
                 </button>
               </div>
               {loading ? (
