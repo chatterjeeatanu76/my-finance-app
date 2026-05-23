@@ -300,7 +300,7 @@ export default function FinanceApp() {
 
         {/* Budget Warning Bar (inline, below header) */}
         {currentMonthExpense > 0 && (
-          <div className={`rounded-[24px] p-5 mb-8 border ${
+          <div className={`rounded-[24px] p-5 mb-5 border ${
             currentMonthExpense >= BUDGET_LIMIT
               ? 'bg-red-950/50 border-red-800'
               : currentMonthExpense >= BUDGET_LIMIT * 0.8
@@ -389,7 +389,7 @@ export default function FinanceApp() {
               <div className="flex flex-col md:flex-row md:items-end gap-3">
                 {type === 'income' && (
                   <div className="flex flex-col gap-1 md:flex-1">
-                    <label className="text-xs text-zinc-500">Flat No.</label>
+                    {/*<label className="text-xs text-zinc-500">Flat No.</label> */}
                     <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
                       <option value="">Select Flat</option>
                       {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
@@ -432,7 +432,7 @@ export default function FinanceApp() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2x font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
-                  <Loader2 size={12} className={loading ? 'animate-spin' : ''} />  Refresh
+                  <Loader2 size={12} className={loading ? 'animate-spin' : ''} />  
                 </button>
               </div>
               {loading ? (
@@ -566,7 +566,7 @@ export default function FinanceApp() {
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
                   <button onClick={() => setReportView(reportView === 'table' ? 'charts' : 'table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><PieChart size={20} /></button>
                 </div>
@@ -595,7 +595,7 @@ export default function FinanceApp() {
 
               {reportView === 'charts' ? (
                 <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl h-[420px]">
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-5">
                     <h2 className="text-2xl font-semibold">Financial Charts</h2>
                     <button onClick={() => setReportView('table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><X size={20} /></button>
                   </div>
@@ -610,8 +610,8 @@ export default function FinanceApp() {
                 </div>
               ) : (
                 <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-semibold">Transaction Report</h2>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-2x font-semibold">Transaction Report</h2>
                     <button onClick={() => setReportView('charts')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><BarChart3 size={20} /></button>
                   </div>
                   <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
@@ -624,10 +624,10 @@ export default function FinanceApp() {
                       <tbody>
                         {transactions.map(item => (
                           <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="py-4 pr-4">{item.title}</td>
-                            <td className="py-4 pr-4">{item.date}</td>
-                            <td className="py-4 pr-4">{item.category}</td>
-                            <td className={`py-4 font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                            <td className="py-4 text-sm pr-4">{item.title}</td>
+                            <td className="py-4 text-sm pr-4">{item.date}</td>
+                            <td className="py-4 text-sm pr-4">{item.category}</td>
+                            <td className={`py-4 text-sm font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                               {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
                             </td>
                           </tr>
@@ -640,7 +640,7 @@ export default function FinanceApp() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl h-[400px]">
-              <h2 className="text-2xl font-semibold mb-6">Income & Expense Trends</h2>
+              <h2 className="text-2xl font-semibold mb-5">Income & Expense Trends</h2>
               <ResponsiveContainer width="100%" height="85%">
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
