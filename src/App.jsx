@@ -29,6 +29,7 @@ export default function FinanceApp() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [category, setCategory] = useState('Food')
   const [flatNo, setFlatNo] = useState('')
+  const [otherCategory, setOtherCategory] = useState('')
   const flatNumbers = [
     'Flat-101',
     'Flat-102',
@@ -167,17 +168,18 @@ export default function FinanceApp() {
   }
 
   const addTransaction = async () => {
-    if (!amount || !date) {
+    if (!amount || !date || (category === 'Others' && !otherCategory.trim())) {
       showToast('error', 'Please fill in all fields')
       return
     }
     setSaving(true)
     try {
-      const newTransaction = { title: category, amount: Number(amount), type, category, date, flat_no: type === 'income' ? flatNo : null }
+      const effectiveCategory = category === 'Others' && otherCategory.trim() ? otherCategory.trim() : category
+      const newTransaction = { title: effectiveCategory, amount: Number(amount), type, category: effectiveCategory, date, flat_no: type === 'income' ? flatNo : null }
       const { data, error } = await supabase.from('transactions').insert([newTransaction]).select()
       if (error) throw error
       setTransactions(prev => [data[0], ...prev])
-      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food'); setFlatNo('')
+      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food'); setFlatNo(''); setOtherCategory('')
       showToast('success', 'Transaction saved!')
       // Reset dismissed if new expense might trigger alert
       if (type === 'expense') setBudgetDismissed(false)
@@ -372,11 +374,19 @@ export default function FinanceApp() {
                   </select>
                 )}
                 <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white" />
-                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
-                  {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Other'].map(c => (
+                <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
+                  {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others'].map(c => (
                     <option key={c} className="bg-zinc-800">{c}</option>
                   ))}
                 </select>
+                {category === 'Others' && (
+                  <input
+                    value={otherCategory}
+                    onChange={e => setOtherCategory(e.target.value)}
+                    placeholder="Please specify..."
+                    className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500"
+                  />
+                )}
                 <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="Amount (₹)" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500" />
                 <button onClick={addTransaction} disabled={saving}
                   className="w-full bg-gradient-to-r from-white to-zinc-300 text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity">
