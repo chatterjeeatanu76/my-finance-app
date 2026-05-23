@@ -28,6 +28,65 @@ export default function FinanceApp() {
   const [type, setType] = useState('expense')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [category, setCategory] = useState('Food')
+  const [flatNo, setFlatNo] = useState('')
+  const flatNumbers = [
+    'Flat-101',
+    'Flat-102',
+    'Flat-103',
+    'Flat-104',
+    'Flat-105',
+    'Flat-106',
+    'Flat-107',
+    'Flat-108',
+    'Flat-109',
+    'Flat-110',
+    'Flat-111',
+    'Flat-201',
+    'Flat-202',
+    'Flat-203',
+    'Flat-204',
+    'Flat-205',
+    'Flat-206',
+    'Flat-207',
+    'Flat-208',
+    'Flat-209',
+    'Flat-210',
+    'Flat-211',
+    'Flat-301',
+    'Flat-302',
+    'Flat-303',
+    'Flat-304',
+    'Flat-305',
+    'Flat-306',
+    'Flat-307',
+    'Flat-308',
+    'Flat-309',
+    'Flat-310',
+    'Flat-311',
+    'Flat-401',
+    'Flat-402',
+    'Flat-403',
+    'Flat-404',
+    'Flat-405',
+    'Flat-406',
+    'Flat-407',
+    'Flat-408',
+    'Flat-409',
+    'Flat-410',
+    'Flat-411',
+    'Flat-501',
+    'Flat-502',
+    'Flat-503',
+    'Flat-504',
+    'Flat-505',
+    'Flat-506',
+    'Flat-507',
+    'Flat-508',
+    'Flat-509',
+    'Flat-510',
+    'Flat-511'
+  ]
+
   const [reportView, setReportView] = useState('table')
   const [activePage, setActivePage] = useState('home')
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -114,11 +173,11 @@ export default function FinanceApp() {
     }
     setSaving(true)
     try {
-      const newTransaction = { title: category, amount: Number(amount), type, category, date }
+      const newTransaction = { title: category, amount: Number(amount), type, category, date, flat_no: type === 'income' ? flatNo : null }
       const { data, error } = await supabase.from('transactions').insert([newTransaction]).select()
       if (error) throw error
       setTransactions(prev => [data[0], ...prev])
-      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food')
+      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food'); setFlatNo('')
       showToast('success', 'Transaction saved!')
       // Reset dismissed if new expense might trigger alert
       if (type === 'expense') setBudgetDismissed(false)
@@ -306,6 +365,12 @@ export default function FinanceApp() {
                 ))}
               </div>
               <div className="space-y-4">
+                {type === 'income' && (
+                  <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
+                    <option value="">Select Flat No.</option>
+                    {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
+                  </select>
+                )}
                 <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white" />
                 <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
                   {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Other'].map(c => (
@@ -343,7 +408,7 @@ export default function FinanceApp() {
                     <div key={item.id} className="flex items-center justify-between bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
                       <div>
                         <h3 className="font-semibold text-lg">{item.title}</h3>
-                        <p className="text-sm text-zinc-400">{item.date} • {item.category}</p>
+                        <p className="text-sm text-zinc-400">{item.date} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}</p>
                       </div>
                       <div className="flex items-center gap-4">
                         <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
