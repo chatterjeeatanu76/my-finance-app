@@ -624,10 +624,10 @@ export default function FinanceApp() {
                       <tbody>
                         {transactions.map(item => (
                           <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="py-4 text-sm pr-4">{item.title}</td>
-                            <td className="py-4 text-sm pr-4">{item.date}</td>
-                            <td className="py-4 text-sm pr-4">{item.category}</td>
-                            <td className={`py-4 text-sm font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                            <td className="py-4 text-xs pr-4">{item.title}</td>
+                            <td className="py-4 text-xs pr-4">{item.date}</td>
+                            <td className="py-4 text-xs pr-4">{item.category}</td>
+                            <td className={`py-4 text-xs font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                               {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
                             </td>
                           </tr>
