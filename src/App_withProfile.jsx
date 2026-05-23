@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check
+  Home, BarChart3, User, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
@@ -92,7 +92,15 @@ export default function FinanceApp() {
 
   const [reportView, setReportView] = useState('table')
   const [activePage, setActivePage] = useState('home')
-
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [profileData, setProfileData] = useState({
+    name: 'Atanu Chatterjee',
+    role: 'UI/UX Designer & Product Designer',
+    email: 'atanu@example.com',
+    mobile: '+91 98765 43210',
+    location: 'Hyderabad, India',
+    company: 'Freelance Designer',
+  })
 
   const showToast = (type, message) => {
     setToast({ type, message })
@@ -288,7 +296,7 @@ export default function FinanceApp() {
               <p className="text-zinc-400 mt-2">Track your income and expenses smartly.</p>
             </div>
 <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
-              {['home', 'reports'].map(page => (
+              {['home', 'reports', 'profile'].map(page => (
                 <button key={page} onClick={() => setActivePage(page)}
                   className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
                   {page}
@@ -581,10 +589,34 @@ export default function FinanceApp() {
           </div>
         )}
 
+        {/* Profile Page */}
+        {activePage === 'profile' && (
+          <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
+            <div className="flex items-center justify-between mb-8">
+              <div><h2 className="text-3xl font-bold">{profileData.name}</h2><p className="text-zinc-400 mt-2">{profileData.role}</p></div>
+              <button onClick={() => setIsEditingProfile(!isEditingProfile)} className="bg-white text-black px-5 py-3 rounded-2xl font-semibold hover:bg-zinc-200 transition-colors">
+                {isEditingProfile ? 'Save' : 'Edit'}
+              </button>
+            </div>
+            <div className="space-y-4">
+              {Object.entries(profileData).map(([key, value]) => (
+                <div key={key} className="bg-zinc-800 rounded-2xl p-5 border border-zinc-700">
+                  <p className="text-zinc-400 text-sm mb-2 capitalize">{key}</p>
+                  {isEditingProfile ? (
+                    <input value={value} onChange={e => setProfileData({ ...profileData, [key]: e.target.value })} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 outline-none text-white" />
+                  ) : (
+                    <h3 className="text-lg font-semibold">{value}</h3>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Mobile Bottom Nav */}
         <div className="fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
           <div className="flex items-center justify-between">
-            {[{ page: 'home', icon: <Home size={20} />, label: 'Home' }, { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' }].map(({ page, icon, label }) => (
+            {[{ page: 'home', icon: <Home size={20} />, label: 'Home' }, { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' }, { page: 'profile', icon: <User size={20} />, label: 'Profile' }].map(({ page, icon, label }) => (
               <button key={page} onClick={() => setActivePage(page)} className={`flex flex-col items-center gap-1 text-xs ${activePage === page ? 'text-white' : 'text-zinc-500'}`}>{icon}{label}</button>
             ))}
           </div>
