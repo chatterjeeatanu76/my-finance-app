@@ -375,7 +375,7 @@ export default function FinanceApp() {
         {/* Home Page */}
         {activePage === 'home' && (
           <div className="flex flex-col gap-8">
-            <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-6 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+            <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-3 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
               <div className="flex items-center gap-2 mb-6"><Plus /><h2 className="text-2xl font-semibold">Add Transaction</h2></div>
               <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
                 {['expense', 'income'].map(t => (
