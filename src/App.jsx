@@ -385,33 +385,51 @@ export default function FinanceApp() {
                   </button>
                 ))}
               </div>
-              <div className="space-y-4">
+              {/* Desktop: inline row | Mobile: stacked */}
+              <div className="flex flex-col md:flex-row md:items-end gap-3">
                 {type === 'income' && (
-                  <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
-                    <option value="">Select Flat No.</option>
-                    {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
-                  </select>
+                  <div className="flex flex-col gap-1 md:flex-1">
+                    <label className="text-xs text-zinc-500">Flat No.</label>
+                    <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
+                      <option value="">Select Flat</option>
+                      {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
+                    </select>
+                  </div>
                 )}
-                <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white" />
-                <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white">
-                  {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others'].map(c => (
-                    <option key={c} className="bg-zinc-800">{c}</option>
-                  ))}
-                </select>
-                {category === 'Others' && (
+                <div className="flex flex-col gap-1 md:flex-1">
+                  <label className="text-xs text-zinc-500">Date</label>
+                  <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white" />
+                </div>
+                <div className="flex flex-col gap-1 md:flex-[1.4]">
+                  <label className="text-xs text-zinc-500">Category</label>
+                  <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
+                    {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others'].map(c => (
+                      <option key={c} className="bg-zinc-800">{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1 md:flex-1">
+                  <label className="text-xs text-zinc-500">Amount (₹)</label>
+                  <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="0" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500" />
+                </div>
+                <div className="flex flex-col gap-1 md:flex-none">
+                  <label className="text-xs text-zinc-500 hidden md:block">&nbsp;</label>
+                  <button onClick={addTransaction} disabled={saving}
+                    className="w-full md:w-auto bg-gradient-to-r from-white to-zinc-300 text-black px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity whitespace-nowrap">
+                    {saving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : '+ Add'}
+                  </button>
+                </div>
+              </div>
+              {category === 'Others' && (
+                <div className="mt-3">
                   <input
                     value={otherCategory}
                     onChange={e => setOtherCategory(e.target.value)}
-                    placeholder="Please specify..."
-                    className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500"
+                    placeholder="Please specify category..."
+                    className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500"
                   />
-                )}
-                <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="Amount (₹)" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-4 outline-none text-white placeholder:text-zinc-500" />
-                <button onClick={addTransaction} disabled={saving}
-                  className="w-full bg-gradient-to-r from-white to-zinc-300 text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity">
-                  {saving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : '+ Add Transaction'}
-                </button>
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
