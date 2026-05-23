@@ -363,11 +363,11 @@ export default function FinanceApp() {
             { label: 'Expenses', value: `₹ ${totalExpense.toLocaleString()}`, icon: <TrendingDown size={16} className="text-red-400" />, color: 'text-red-400' },
           ].map(({ label, value, icon, color }) => (
             <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-[28px] p-3 md:p-6 border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between mb-1 md:mb-4">
-                <h2 className="text-[10px] md:text-lg font-medium leading-tight">{label}</h2>
+              <div className="flex items-center justify-between mb-1 md:mb-3">
+                <h2 className="text-[11px] md:text-lg font-medium leading-tight">{label}</h2>
                 <span className="hidden md:block">{icon}</span>
               </div>
-              <p className={`text-xs md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
+              <p className={`text-sm md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
             </div>
           ))}
         </div>
@@ -397,11 +397,9 @@ export default function FinanceApp() {
                   </div>
                 )}
                 <div className="flex flex-col gap-1 md:flex-1">
-                  <label className="text-xs text-zinc-500">Date</label>
                   <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white" />
                 </div>
                 <div className="flex flex-col gap-1 md:flex-[1.4]">
-                  <label className="text-xs text-zinc-500">Category</label>
                   <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
                     {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others'].map(c => (
                       <option key={c} className="bg-zinc-800">{c}</option>
@@ -409,11 +407,9 @@ export default function FinanceApp() {
                   </select>
                 </div>
                 <div className="flex flex-col gap-1 md:flex-1">
-                  <label className="text-xs text-zinc-500">Amount (₹)</label>
                   <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="0" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500" />
                 </div>
                 <div className="flex flex-col gap-1 md:flex-none">
-                  <label className="text-xs text-zinc-500 hidden md:block">&nbsp;</label>
                   <button onClick={addTransaction} disabled={saving}
                     className="w-full md:w-auto bg-gradient-to-r from-white to-zinc-300 text-black px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity whitespace-nowrap">
                     {saving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : '+ Add'}
@@ -451,11 +447,12 @@ export default function FinanceApp() {
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                  {transactions.map(item => (
-                    <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
-                      {editingId === item.id ? (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  {/* Desktop view */}
+                  <div className="hidden md:block space-y-3">
+                    {transactions.map(item => (
+                      <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
+                        {editingId === item.id ? (
+                          <div className="grid grid-cols-4 gap-3">
                             <div>
                               <p className="text-xs text-zinc-500 mb-1">Date</p>
                               <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
@@ -482,25 +479,82 @@ export default function FinanceApp() {
                               </button>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-lg">{item.title}</h3>
-                            <p className="text-sm text-zinc-400">{item.date} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}</p>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="text-left">
+                              <h3 className="font-semibold text-lg">{item.title}</h3>
+                              <p className="text-sm text-zinc-400 text-left">{item.date} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}</p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
+                              </p>
+                              <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors p-1">
+                                <Pencil size={18} />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                              {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
-                            </p>
-                            <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors p-1">
-                              <Pencil size={18} />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Mobile scrollable table view */}
+                  <div className="md:hidden overflow-x-auto rounded-2xl border border-white/10">
+                    <table className="w-full text-left min-w-[520px]">
+                      <thead>
+                        <tr className="bg-zinc-900 border-b border-white/10">
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Category</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Flat No.</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Date</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Amount</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Edit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map((item, idx) => (
+                          <tr key={item.id} className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-800/40'}`}>
+                            {editingId === item.id ? (
+                              <>
+                                <td className="px-3 py-2" colSpan={4}>
+                                  <div className="flex gap-2">
+                                    <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
+                                      className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
+                                    <select value={editFields.category} onChange={e => setEditFields({...editFields, category: e.target.value})}
+                                      className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white">
+                                      {['Food','Shopping','Travel','Bills','Electricity Bill','Rent','Water Bill','Watchman Salary','Garbage','Security Salary','Maintenance Cost','Miscellaneous','Salary','Health','Education','Others'].map(c => <option key={c}>{c}</option>)}
+                                    </select>
+                                    <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})}
+                                      className="w-20 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <div className="flex gap-1">
+                                    <button onClick={saveEdit} className="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">Save</button>
+                                    <button onClick={() => setEditingId(null)} className="bg-zinc-700 text-white px-2 py-1 rounded-lg text-xs font-semibold">✕</button>
+                                  </div>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="px-4 py-3 text-xs font-semibold text-white">{item.category}</td>
+                                <td className="px-4 py-3 text-xs text-zinc-400">{item.flat_no || '—'}</td>
+                                <td className="px-4 py-3 text-xs text-zinc-400">{item.date}</td>
+                                <td className={`px-4 py-3 text-xs font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                  {item.type === 'income' ? '+' : '-'}₹{Number(item.amount).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors">
+                                    <Pencil size={14} />
+                                  </button>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
