@@ -340,15 +340,18 @@ export default function FinanceApp() {
         )}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-10">
           {[
-            { label: 'Total Balance', value: `₹ ${balance.toLocaleString()}`, icon: <Wallet />, color: '' },
-            { label: 'Income', value: `₹ ${totalIncome.toLocaleString()}`, icon: <TrendingUp className="text-green-400" />, color: 'text-green-400' },
-            { label: 'Expenses', value: `₹ ${totalExpense.toLocaleString()}`, icon: <TrendingDown className="text-red-400" />, color: 'text-red-400' },
+            { label: 'Balance', value: `₹ ${balance.toLocaleString()}`, icon: <Wallet size={16} />, color: '' },
+            { label: 'Income', value: `₹ ${totalIncome.toLocaleString()}`, icon: <TrendingUp size={16} className="text-green-400" />, color: 'text-green-400' },
+            { label: 'Expenses', value: `₹ ${totalExpense.toLocaleString()}`, icon: <TrendingDown size={16} className="text-red-400" />, color: 'text-red-400' },
           ].map(({ label, value, icon, color }) => (
-            <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[28px] p-6 border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-medium">{label}</h2>{icon}</div>
-              <p className={`text-4xl font-black tracking-tight ${color}`}>{value}</p>
+            <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-[28px] p-3 md:p-6 border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-1 md:mb-4">
+                <h2 className="text-[10px] md:text-lg font-medium leading-tight">{label}</h2>
+                <span className="hidden md:block">{icon}</span>
+              </div>
+              <p className={`text-xs md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
             </div>
           ))}
         </div>
