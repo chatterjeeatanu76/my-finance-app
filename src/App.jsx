@@ -367,7 +367,7 @@ export default function FinanceApp() {
                 <h2 className="text-[11px] md:text-lg font-medium leading-tight">{label}</h2>
                 <span className="hidden md:block">{icon}</span>
               </div>
-              <p className={`text-sm md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
+              <p className={`text-lg text-left md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
             </div>
           ))}
         </div>
