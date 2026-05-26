@@ -410,7 +410,7 @@ export default function FinanceApp() {
                 <div className="mt-3">
                   <input
                     value={otherCategory}
-                    onChange={e => setOtherCategory(e.target.value.slice(0, 100))}
+                    onChange={e => setOtherCategory(e.target.value.slice(0, 30))}
                     placeholder="Please specify category..."
                     maxLength={30}
                     className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500"
