@@ -415,7 +415,7 @@ export default function FinanceApp() {
                     maxLength={30}
                     className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500"
                   />
-                  <p className="text-xs text-zinc-500 mt-1 text-right">{otherCategory.length}/100</p>
+                  <p className="text-xs text-zinc-500 mt-1 text-right">{otherCategory.length}/30</p>
                 </div>
               )}
             </div>
@@ -632,7 +632,7 @@ export default function FinanceApp() {
                                           maxLength={30}
                                           className="w-full bg-zinc-800 border border-yellow-500/50 rounded-lg px-2 py-1.5 text-xs outline-none text-white placeholder:text-zinc-500"
                                         />
-                                        <p className="text-xs text-zinc-500 mt-0.5 text-right">{editOtherCategory.length}/100</p>
+                                        <p className="text-xs text-zinc-500 mt-0.5 text-right">{editOtherCategory.length}/30</p>
                                       </div>
                                     )}
                                   </td>
