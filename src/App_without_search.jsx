@@ -55,7 +55,6 @@ export default function FinanceApp() {
   const [editFields, setEditFields] = useState({})
   // For edit mode: track if the category is "Others" (custom)
   const [editOtherCategory, setEditOtherCategory] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
 
   const flatNumbers = [
     'Flat-101','Flat-102','Flat-103','Flat-104','Flat-105','Flat-106','Flat-107','Flat-108','Flat-109','Flat-110','Flat-111',
@@ -277,7 +276,7 @@ export default function FinanceApp() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
-              <p className="text-zinc-400 mt-2">Green Meadows : Block - A</p>
+              <p className="text-zinc-400 mt-2">Track your income and expenses smartly.</p>
             </div>
             <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
               {['home', 'reports'].map(page => (
@@ -421,29 +420,11 @@ export default function FinanceApp() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-3 border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2x font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
                   <Loader2 size={12} className={loading ? 'animate-spin' : ''} />
                 </button>
-              </div>
-              {/* Search Bar */}
-              <div className="relative mb-4">
-                <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search by category, flat no. or amount..."
-                  className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl pl-10 pr-10 py-3 outline-none text-white placeholder:text-zinc-500 text-sm"
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors">
-                    <X size={14} />
-                  </button>
-                )}
               </div>
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -455,30 +436,12 @@ export default function FinanceApp() {
                   <Wallet size={40} className="mx-auto mb-3 opacity-30" />
                   <p>No transactions yet. Add your first one!</p>
                 </div>
-              ) : (() => {
-                const q = searchQuery.trim().toLowerCase()
-                const filtered = q
-                  ? transactions.filter(t =>
-                      t.category?.toLowerCase().includes(q) ||
-                      t.title?.toLowerCase().includes(q) ||
-                      (t.flat_no && t.flat_no.toLowerCase().includes(q)) ||
-                      String(t.amount).includes(q) ||
-                      formatDateDisplay(t.date).includes(q)
-                    )
-                  : transactions
-                return filtered.length === 0 ? (
-                  <div className="text-center py-16 text-zinc-500">
-                    <svg className="mx-auto mb-3 opacity-30" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <p className="text-sm">No results for "<span className="text-white">{searchQuery}</span>"</p>
-                  </div>
-                ) : (
+              ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
 
                   {/* Desktop view */}
                   <div className="hidden md:block space-y-3">
-                    {filtered.map(item => (
+                    {transactions.map(item => (
                       <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
                         {editingId === item.id ? (
                           <div className="flex flex-col gap-3">
@@ -600,7 +563,7 @@ export default function FinanceApp() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filtered.map((item, idx) => (
+                        {transactions.map((item, idx) => (
                           <React.Fragment key={item.id}>
                             <tr className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-800/40'}`}>
                               {editingId === item.id ? (
@@ -665,8 +628,7 @@ export default function FinanceApp() {
                     </table>
                   </div>
                 </div>
-                )
-              })()}
+              )}
             </div>
           </div>
         )}
