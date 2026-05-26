@@ -16,27 +16,6 @@ const supabase = createClient(
 
 const BUDGET_LIMIT = 85000
 
-// Helper: format ISO date string (yyyy-mm-dd) to dd/mm/yyyy for display
-function formatDateDisplay(isoDate) {
-  if (!isoDate) return ''
-  const [y, m, d] = isoDate.split('-')
-  return `${d}/${m}/${y}`
-}
-
-// Helper: parse dd/mm/yyyy input back to yyyy-mm-dd for storage
-function parseDateInput(ddmmyyyy) {
-  if (!ddmmyyyy) return ''
-  const parts = ddmmyyyy.split('/')
-  if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`
-  return ddmmyyyy
-}
-
-const STANDARD_CATEGORIES = ['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others']
-
-function isCustomCategory(cat) {
-  return cat && !STANDARD_CATEGORIES.includes(cat)
-}
-
 export default function FinanceApp() {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -53,27 +32,78 @@ export default function FinanceApp() {
   const [otherCategory, setOtherCategory] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editFields, setEditFields] = useState({})
-  // For edit mode: track if the category is "Others" (custom)
-  const [editOtherCategory, setEditOtherCategory] = useState('')
-
   const flatNumbers = [
-    'Flat-101','Flat-102','Flat-103','Flat-104','Flat-105','Flat-106','Flat-107','Flat-108','Flat-109','Flat-110','Flat-111',
-    'Flat-201','Flat-202','Flat-203','Flat-204','Flat-205','Flat-206','Flat-207','Flat-208','Flat-209','Flat-210','Flat-211',
-    'Flat-301','Flat-302','Flat-303','Flat-304','Flat-305','Flat-306','Flat-307','Flat-308','Flat-309','Flat-310','Flat-311',
-    'Flat-401','Flat-402','Flat-403','Flat-404','Flat-405','Flat-406','Flat-407','Flat-408','Flat-409','Flat-410','Flat-411',
-    'Flat-501','Flat-502','Flat-503','Flat-504','Flat-505','Flat-506','Flat-507','Flat-508','Flat-509','Flat-510','Flat-511'
+    'Flat-101',
+    'Flat-102',
+    'Flat-103',
+    'Flat-104',
+    'Flat-105',
+    'Flat-106',
+    'Flat-107',
+    'Flat-108',
+    'Flat-109',
+    'Flat-110',
+    'Flat-111',
+    'Flat-201',
+    'Flat-202',
+    'Flat-203',
+    'Flat-204',
+    'Flat-205',
+    'Flat-206',
+    'Flat-207',
+    'Flat-208',
+    'Flat-209',
+    'Flat-210',
+    'Flat-211',
+    'Flat-301',
+    'Flat-302',
+    'Flat-303',
+    'Flat-304',
+    'Flat-305',
+    'Flat-306',
+    'Flat-307',
+    'Flat-308',
+    'Flat-309',
+    'Flat-310',
+    'Flat-311',
+    'Flat-401',
+    'Flat-402',
+    'Flat-403',
+    'Flat-404',
+    'Flat-405',
+    'Flat-406',
+    'Flat-407',
+    'Flat-408',
+    'Flat-409',
+    'Flat-410',
+    'Flat-411',
+    'Flat-501',
+    'Flat-502',
+    'Flat-503',
+    'Flat-504',
+    'Flat-505',
+    'Flat-506',
+    'Flat-507',
+    'Flat-508',
+    'Flat-509',
+    'Flat-510',
+    'Flat-511'
   ]
 
   const [reportView, setReportView] = useState('table')
   const [activePage, setActivePage] = useState('home')
+
 
   const showToast = (type, message) => {
     setToast({ type, message })
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => { fetchTransactions() }, [])
+  useEffect(() => {
+    fetchTransactions()
+  }, [])
 
+  // Current month expenses
   const currentMonthExpense = useMemo(() => {
     const now = new Date()
     const currentMonth = now.getMonth()
@@ -86,6 +116,7 @@ export default function FinanceApp() {
       .reduce((s, t) => s + Number(t.amount), 0)
   }, [transactions])
 
+  // Show/hide budget alert
   useEffect(() => {
     if (currentMonthExpense > BUDGET_LIMIT && !budgetDismissed) {
       setShowBudgetAlert(true)
@@ -94,6 +125,7 @@ export default function FinanceApp() {
     }
   }, [currentMonthExpense, budgetDismissed])
 
+  // Reset dismissed state on new month
   useEffect(() => {
     const lastDismissed = localStorage.getItem('budgetDismissedMonth')
     const currentMonth = new Date().toISOString().slice(0, 7)
@@ -143,6 +175,7 @@ export default function FinanceApp() {
       setTransactions(prev => [data[0], ...prev])
       setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food'); setFlatNo(''); setOtherCategory('')
       showToast('success', 'Transaction saved!')
+      // Reset dismissed if new expense might trigger alert
       if (type === 'expense') setBudgetDismissed(false)
     } catch (error) {
       showToast('error', 'Failed to save: ' + error.message)
@@ -153,48 +186,20 @@ export default function FinanceApp() {
 
   const editTransaction = (item) => {
     setEditingId(item.id)
-    // Determine if category is custom (Others)
-    const isCustom = isCustomCategory(item.category)
-    setEditFields({
-      amount: item.amount,
-      category: isCustom ? 'Others' : item.category,
-      date: item.date,
-      flat_no: item.flat_no || '',
-      type: item.type,
-    })
-    setEditOtherCategory(isCustom ? item.category : '')
+    setEditFields({ title: item.title, amount: item.amount, category: item.category, date: item.date })
   }
 
   const saveEdit = async () => {
     if (!editFields.amount || !editFields.date) return
-    if (editFields.category === 'Others' && !editOtherCategory.trim()) {
-      showToast('error', 'Please specify the category')
-      return
-    }
-    const effectiveCategory = editFields.category === 'Others' && editOtherCategory.trim()
-      ? editOtherCategory.trim()
-      : editFields.category
-
     try {
       const { error } = await supabase
         .from('transactions')
-        .update({
-          title: effectiveCategory,
-          amount: Number(editFields.amount),
-          category: effectiveCategory,
-          date: editFields.date,
-          flat_no: editFields.type === 'income' ? editFields.flat_no : null,
-        })
+        .update({ title: editFields.category, amount: Number(editFields.amount), category: editFields.category, date: editFields.date })
         .eq('id', editingId)
       if (error) throw error
-      setTransactions(prev => prev.map(t =>
-        t.id === editingId
-          ? { ...t, title: effectiveCategory, amount: Number(editFields.amount), category: effectiveCategory, date: editFields.date, flat_no: editFields.type === 'income' ? editFields.flat_no : null }
-          : t
-      ))
+      setTransactions(prev => prev.map(t => t.id === editingId ? { ...t, ...editFields, amount: Number(editFields.amount), title: editFields.category } : t))
       setEditingId(null)
       setEditFields({})
-      setEditOtherCategory('')
       showToast('success', 'Transaction updated!')
     } catch (error) {
       showToast('error', 'Failed to update: ' + error.message)
@@ -249,13 +254,17 @@ export default function FinanceApp() {
                     You've spent <span className="text-white font-bold">₹ {currentMonthExpense.toLocaleString()}</span> this month,
                     which is <span className="text-white font-bold">₹ {Math.abs(budgetRemaining).toLocaleString()}</span> over your ₹15,000 budget.
                   </p>
+                  {/* Progress Bar */}
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-red-400 mb-1">
                       <span>₹ 0</span>
                       <span>Budget: ₹ {BUDGET_LIMIT.toLocaleString()}</span>
                     </div>
                     <div className="w-full bg-red-900 rounded-full h-2">
-                      <div className="bg-red-500 h-2 rounded-full transition-all duration-500" style={{ width: `${budgetUsedPercent}%` }} />
+                      <div
+                        className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${budgetUsedPercent}%` }}
+                      />
                     </div>
                     <p className="text-xs text-red-400 mt-1">{budgetUsedPercent.toFixed(0)}% of budget used</p>
                   </div>
@@ -278,7 +287,7 @@ export default function FinanceApp() {
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
               <p className="text-zinc-400 mt-2">Track your income and expenses smartly.</p>
             </div>
-            <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
+<div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
               {['home', 'reports'].map(page => (
                 <button key={page} onClick={() => setActivePage(page)}
                   className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
@@ -289,7 +298,7 @@ export default function FinanceApp() {
           </div>
         </div>
 
-        {/* Budget Warning Bar */}
+        {/* Budget Warning Bar (inline, below header) */}
         {currentMonthExpense > 0 && (
           <div className={`rounded-[24px] p-5 mb-5 border ${
             currentMonthExpense >= BUDGET_LIMIT
@@ -376,9 +385,11 @@ export default function FinanceApp() {
                   </button>
                 ))}
               </div>
+              {/* Desktop: inline row | Mobile: stacked */}
               <div className="flex flex-col md:flex-row md:items-end gap-3">
                 {type === 'income' && (
                   <div className="flex flex-col gap-1 md:flex-1">
+                    {/*<label className="text-xs text-zinc-500">Flat No.</label> */}
                     <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
                       <option value="">Select Flat</option>
                       {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
@@ -390,7 +401,7 @@ export default function FinanceApp() {
                 </div>
                 <div className="flex flex-col gap-1 md:flex-[1.4]">
                   <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
-                    {STANDARD_CATEGORIES.map(c => (
+                    {['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others'].map(c => (
                       <option key={c} className="bg-zinc-800">{c}</option>
                     ))}
                   </select>
@@ -409,12 +420,10 @@ export default function FinanceApp() {
                 <div className="mt-3">
                   <input
                     value={otherCategory}
-                    onChange={e => setOtherCategory(e.target.value.slice(0, 100))}
+                    onChange={e => setOtherCategory(e.target.value)}
                     placeholder="Please specify category..."
-                    maxLength={100}
                     className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500"
                   />
-                  <p className="text-xs text-zinc-500 mt-1 text-right">{otherCategory.length}/100</p>
                 </div>
               )}
             </div>
@@ -423,7 +432,7 @@ export default function FinanceApp() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2x font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
-                  <Loader2 size={12} className={loading ? 'animate-spin' : ''} />
+                  <Loader2 size={12} className={loading ? 'animate-spin' : ''} />  
                 </button>
               </div>
               {loading ? (
@@ -438,103 +447,43 @@ export default function FinanceApp() {
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-
                   {/* Desktop view */}
                   <div className="hidden md:block space-y-3">
                     {transactions.map(item => (
                       <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
                         {editingId === item.id ? (
-                          <div className="flex flex-col gap-3">
-                            <div className="grid grid-cols-4 gap-3">
-                              {/* Date */}
-                              <div>
-                                <p className="text-xs text-zinc-500 mb-1">Date</p>
-                                <input
-                                  type="date"
-                                  value={editFields.date}
-                                  onChange={e => setEditFields({...editFields, date: e.target.value})}
-                                  className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
-                                />
-                              </div>
-                              {/* Category */}
-                              <div>
-                                <p className="text-xs text-zinc-500 mb-1">Category</p>
-                                <select
-                                  value={editFields.category}
-                                  onChange={e => { setEditFields({...editFields, category: e.target.value}); setEditOtherCategory('') }}
-                                  className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
-                                >
-                                  {STANDARD_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                                </select>
-                              </div>
-                              {/* Amount */}
-                              <div>
-                                <p className="text-xs text-zinc-500 mb-1">Amount (₹)</p>
-                                <input
-                                  type="number"
-                                  value={editFields.amount}
-                                  onChange={e => setEditFields({...editFields, amount: e.target.value})}
-                                  className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
-                                />
-                              </div>
-                              {/* Flat No — only show if income */}
-                              {editFields.type === 'income' ? (
-                                <div>
-                                  <p className="text-xs text-zinc-500 mb-1">Flat No.</p>
-                                  <select
-                                    value={editFields.flat_no}
-                                    onChange={e => setEditFields({...editFields, flat_no: e.target.value})}
-                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
-                                  >
-                                    <option value="">Select Flat</option>
-                                    {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
-                                  </select>
-                                </div>
-                              ) : (
-                                <div className="flex items-end gap-2">
-                                  <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                    <Check size={14} /> Save
-                                  </button>
-                                  <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                    <X size={14} /> Cancel
-                                  </button>
-                                </div>
-                              )}
+                          <div className="grid grid-cols-4 gap-3">
+                            <div>
+                              <p className="text-xs text-zinc-500 mb-1">Date</p>
+                              <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
+                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white" />
                             </div>
-
-                            {/* Others custom field */}
-                            {editFields.category === 'Others' && (
-                              <div>
-                                <input
-                                  value={editOtherCategory}
-                                  onChange={e => setEditOtherCategory(e.target.value.slice(0, 100))}
-                                  placeholder="Please specify category..."
-                                  maxLength={100}
-                                  className="w-full bg-zinc-800 border border-yellow-500/50 rounded-xl px-3 py-2 text-sm outline-none text-white placeholder:text-zinc-500"
-                                />
-                                <p className="text-xs text-zinc-500 mt-1 text-right">{editOtherCategory.length}/100</p>
-                              </div>
-                            )}
-
-                            {/* Save/Cancel row for income type (after flat no) */}
-                            {editFields.type === 'income' && (
-                              <div className="flex gap-2">
-                                <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                  <Check size={14} /> Save
-                                </button>
-                                <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                  <X size={14} /> Cancel
-                                </button>
-                              </div>
-                            )}
+                            <div>
+                              <p className="text-xs text-zinc-500 mb-1">Category</p>
+                              <select value={editFields.category} onChange={e => setEditFields({...editFields, category: e.target.value})}
+                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white">
+                                {['Food','Shopping','Travel','Bills','Electricity Bill','Rent','Water Bill','Watchman Salary','Garbage','Security Salary','Maintenance Cost','Miscellaneous','Salary','Health','Education','Others'].map(c => <option key={c}>{c}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <p className="text-xs text-zinc-500 mb-1">Amount (₹)</p>
+                              <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})}
+                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white" />
+                            </div>
+                            <div className="flex items-end gap-2">
+                              <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
+                                <Check size={14} /> Save
+                              </button>
+                              <button onClick={() => setEditingId(null)} className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
+                                <X size={14} /> Cancel
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center justify-between">
                             <div className="text-left">
                               <h3 className="font-semibold text-lg">{item.title}</h3>
-                              <p className="text-sm text-zinc-400 text-left">
-                                {formatDateDisplay(item.date)} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}
-                              </p>
+                              <p className="text-sm text-zinc-400 text-left">{item.date} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}</p>
                             </div>
                             <div className="flex items-center gap-4">
                               <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
@@ -552,7 +501,7 @@ export default function FinanceApp() {
 
                   {/* Mobile scrollable table view */}
                   <div className="md:hidden overflow-x-auto rounded-2xl border border-white/10">
-                    <table className="w-full text-left min-w-[540px]">
+                    <table className="w-full text-left min-w-[520px]">
                       <thead>
                         <tr className="bg-zinc-900 border-b border-white/10">
                           <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Category</th>
@@ -564,65 +513,44 @@ export default function FinanceApp() {
                       </thead>
                       <tbody>
                         {transactions.map((item, idx) => (
-                          <React.Fragment key={item.id}>
-                            <tr className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-800/40'}`}>
-                              {editingId === item.id ? (
-                                <>
-                                  <td className="px-3 py-2" colSpan={4}>
-                                    <div className="flex gap-2 flex-wrap">
-                                      <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
-                                        className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]" />
-                                      <select value={editFields.category} onChange={e => { setEditFields({...editFields, category: e.target.value}); setEditOtherCategory('') }}
-                                        className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]">
-                                        {STANDARD_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                                      </select>
-                                      <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})}
-                                        className="w-20 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
-                                      {editFields.type === 'income' && (
-                                        <select value={editFields.flat_no} onChange={e => setEditFields({...editFields, flat_no: e.target.value})}
-                                          className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]">
-                                          <option value="">Select Flat</option>
-                                          {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
-                                        </select>
-                                      )}
-                                    </div>
-                                    {editFields.category === 'Others' && (
-                                      <div className="mt-2">
-                                        <input
-                                          value={editOtherCategory}
-                                          onChange={e => setEditOtherCategory(e.target.value.slice(0, 100))}
-                                          placeholder="Specify category..."
-                                          maxLength={100}
-                                          className="w-full bg-zinc-800 border border-yellow-500/50 rounded-lg px-2 py-1.5 text-xs outline-none text-white placeholder:text-zinc-500"
-                                        />
-                                        <p className="text-xs text-zinc-500 mt-0.5 text-right">{editOtherCategory.length}/100</p>
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2">
-                                    <div className="flex gap-1">
-                                      <button onClick={saveEdit} className="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">Save</button>
-                                      <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="bg-zinc-700 text-white px-2 py-1 rounded-lg text-xs font-semibold">✕</button>
-                                    </div>
-                                  </td>
-                                </>
-                              ) : (
-                                <>
-                                  <td className="px-4 py-3 text-xs font-semibold text-white">{item.category}</td>
-                                  <td className="px-4 py-3 text-xs text-zinc-400">{item.flat_no || '—'}</td>
-                                  <td className="px-4 py-3 text-xs text-zinc-400">{formatDateDisplay(item.date)}</td>
-                                  <td className={`px-4 py-3 text-xs font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                                    {item.type === 'income' ? '+' : '-'}₹{Number(item.amount).toLocaleString()}
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors">
-                                      <Pencil size={14} />
-                                    </button>
-                                  </td>
-                                </>
-                              )}
-                            </tr>
-                          </React.Fragment>
+                          <tr key={item.id} className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-800/40'}`}>
+                            {editingId === item.id ? (
+                              <>
+                                <td className="px-3 py-2" colSpan={4}>
+                                  <div className="flex gap-2">
+                                    <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
+                                      className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
+                                    <select value={editFields.category} onChange={e => setEditFields({...editFields, category: e.target.value})}
+                                      className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white">
+                                      {['Food','Shopping','Travel','Bills','Electricity Bill','Rent','Water Bill','Watchman Salary','Garbage','Security Salary','Maintenance Cost','Miscellaneous','Salary','Health','Education','Others'].map(c => <option key={c}>{c}</option>)}
+                                    </select>
+                                    <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})}
+                                      className="w-20 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <div className="flex gap-1">
+                                    <button onClick={saveEdit} className="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">Save</button>
+                                    <button onClick={() => setEditingId(null)} className="bg-zinc-700 text-white px-2 py-1 rounded-lg text-xs font-semibold">✕</button>
+                                  </div>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="px-4 py-3 text-xs font-semibold text-white">{item.category}</td>
+                                <td className="px-4 py-3 text-xs text-zinc-400">{item.flat_no || '—'}</td>
+                                <td className="px-4 py-3 text-xs text-zinc-400">{item.date}</td>
+                                <td className={`px-4 py-3 text-xs font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                  {item.type === 'income' ? '+' : '-'}₹{Number(item.amount).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors">
+                                    <Pencil size={14} />
+                                  </button>
+                                </td>
+                              </>
+                            )}
+                          </tr>
                         ))}
                       </tbody>
                     </table>
@@ -697,7 +625,7 @@ export default function FinanceApp() {
                         {transactions.map(item => (
                           <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="py-4 text-xs pr-4">{item.title}</td>
-                            <td className="py-4 text-xs pr-4">{formatDateDisplay(item.date)}</td>
+                            <td className="py-4 text-xs pr-4">{item.date}</td>
                             <td className="py-4 text-xs pr-4">{item.category}</td>
                             <td className={`py-4 text-xs font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                               {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
