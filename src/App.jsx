@@ -57,6 +57,22 @@ export default function FinanceApp() {
   const [editOtherCategory, setEditOtherCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
+  const [navVisible, setNavVisible] = useState(true)
+  const lastScrollY = React.useRef(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const current = window.scrollY
+      if (current < lastScrollY.current) {
+        setNavVisible(false)
+      } else {
+        setNavVisible(true)
+      }
+      lastScrollY.current = current
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const flatNumbers = [
     'Flat-101','Flat-102','Flat-103','Flat-104','Flat-105','Flat-106','Flat-107','Flat-108','Flat-109','Flat-110','Flat-111',
@@ -274,7 +290,7 @@ export default function FinanceApp() {
       <div className="max-w-7xl mx-auto pb-28 md:pb-10">
 
         {/* Header */}
-        <div className="sticky top-0 z-50 backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[32px] px-6 py-5 mb-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+        <div className="md:sticky top-0 z-50 backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[32px] px-6 py-5 mb-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
@@ -783,7 +799,7 @@ export default function FinanceApp() {
         )}
 
         {/* Mobile Bottom Nav */}
-        <div className="fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
+        <div className={`fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${navVisible ? 'translate-y-0' : 'translate-y-28'}`}>
           <div className="flex items-center justify-between">
             {[{ page: 'home', icon: <Home size={20} />, label: 'Home' }, { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' }].map(({ page, icon, label }) => (
               <button key={page} onClick={() => setActivePage(page)} className={`flex flex-col items-center gap-1 text-xs ${activePage === page ? 'text-white' : 'text-zinc-500'}`}>{icon}{label}</button>
