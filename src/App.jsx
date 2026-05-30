@@ -31,7 +31,7 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Corpus Fund', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
+const STANDARD_CATEGORIES = ['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others']
 
 function isCustomCategory(cat) {
   return cat && !STANDARD_CATEGORIES.includes(cat)
@@ -56,6 +56,7 @@ export default function FinanceApp() {
   // For edit mode: track if the category is "Others" (custom)
   const [editOtherCategory, setEditOtherCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedMonth, setSelectedMonth] = useState('')
 
   const flatNumbers = [
     'Flat-101','Flat-102','Flat-103','Flat-104','Flat-105','Flat-106','Flat-107','Flat-108','Flat-109','Flat-110','Flat-111',
@@ -277,7 +278,7 @@ export default function FinanceApp() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
-              <p className="text-zinc-400 mt-2">Green Meadows : Block - A</p>
+              <p className="text-zinc-400 mt-2">Green Meadows : Bloak - A</p>
             </div>
             <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
               {['home', 'reports'].map(page => (
@@ -410,16 +411,17 @@ export default function FinanceApp() {
                 <div className="mt-3">
                   <input
                     value={otherCategory}
-                    onChange={e => setOtherCategory(e.target.value.slice(0, 30))}
+                    onChange={e => setOtherCategory(e.target.value.slice(0, 100))}
                     placeholder="Please specify category..."
-                    maxLength={30}
+                    maxLength={100}
                     className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500"
                   />
-                  <p className="text-xs text-zinc-500 mt-1 text-right">{otherCategory.length}/30</p>
+                  <p className="text-xs text-zinc-500 mt-1 text-right">{otherCategory.length}/100</p>
                 </div>
               )}
             </div>
-<div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-3 border border-white/10 shadow-2xl">
+
+            <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-3 border border-white/10 shadow-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2x font-semibold">Recent Transactions</h2>
                 <button onClick={fetchTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
@@ -685,7 +687,6 @@ export default function FinanceApp() {
                 )
               })()}
             </div>
-
           </div>
         )}
 
