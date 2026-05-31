@@ -31,7 +31,7 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const STANDARD_CATEGORIES = ['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Health', 'Education', 'Electricity Bill', 'Rent', 'Water Bill', 'Watchman Salary', 'Garbage', 'Security Salary', 'Maintenance Cost', 'Miscellaneous', 'Others']
+const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Corpus Fund', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
 
 function isCustomCategory(cat) {
   return cat && !STANDARD_CATEGORIES.includes(cat)
