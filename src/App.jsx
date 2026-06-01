@@ -100,21 +100,35 @@ export default function FinanceApp() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const fetchElecRecords = async () => {
-    setElecLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('electricity_tracker')
-        .select('*')
-        .order('flat_no', { ascending: true })
-      if (error) throw error
-      setElecRecords(data || [])
-    } catch (error) {
-      showToast('error', 'Failed to load electricity data: ' + error.message)
-    } finally {
-      setElecLoading(false)
-    }
+const fetchElecRecords = async () => {
+  setElecLoading(true)
+
+  try {
+    const { data, error } = await supabase
+      .from('electricity_payments')
+      .select(`
+        id,
+        flat_no,
+        amount,
+        usn,
+        paid,
+        month,
+        updated_at
+      `)
+      .order('flat_no', { ascending: true })
+
+    if (error) throw error
+
+    setElecRecords(data || [])
+  } catch (error) {
+    showToast(
+      'error',
+      'Failed to load electricity payments: ' + error.message
+    )
+  } finally {
+    setElecLoading(false)
   }
+}
 
   useEffect(() => {
     if (activePage === 'electricity') fetchElecRecords()
@@ -867,7 +881,7 @@ export default function FinanceApp() {
                   </div>
                 </div>
               </div>
-/*}
+*/}
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4">
                 {[
