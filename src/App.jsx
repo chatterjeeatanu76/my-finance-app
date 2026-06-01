@@ -933,6 +933,7 @@ const fetchElecRecords = async () => {
                   ))}
                 </select>
                 {/* Status Filter */}
+              {/*  
                 <div className="flex bg-zinc-800 rounded-2xl p-1 gap-1">
                   {['all', 'paid', 'pending'].map(s => (
                     <button
@@ -950,6 +951,8 @@ const fetchElecRecords = async () => {
                     </button>
                   ))}
                 </div>
+
+                */}
                 {/* Refresh */}
                 <button
                   onClick={fetchElecRecords}
