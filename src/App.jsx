@@ -885,7 +885,7 @@ const fetchElecRecords = async () => {
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: 'Total Flats', value: totalFlats, icon: <Zap size={20} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
+                  { label: 'Total Flats', value: totalFlats, icon: <Zap size={20} className="text-blue-400 hidden md:block" />, iconBg: 'bg-blue-900/60 border-blue-700' },
                   { label: 'Paid', value: paidCount, icon: <CheckCircle size={20} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
                   { label: 'Pending', value: pendingCount, icon: <Zap size={20} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
