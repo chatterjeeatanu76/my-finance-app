@@ -1000,7 +1000,7 @@ const fetchElecRecords = async () => {
                               {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
                             </td>
                             <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
-                              {record.usn_no || '—'}
+                              {record.usn || '—'}
                             </td>
                           </tr>
                         ))}
