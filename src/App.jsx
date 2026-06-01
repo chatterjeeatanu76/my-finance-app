@@ -978,7 +978,7 @@ const fetchElecRecords = async () => {
                       <thead>
                         <tr className="bg-zinc-900/80 border-b border-white/10">
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Flat No.</th>
-                          <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Status</th>
+                        {/*  <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Status</th>  */}
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Amount</th>
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">USN No.</th>
                         </tr>
