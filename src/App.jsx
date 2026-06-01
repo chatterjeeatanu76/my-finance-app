@@ -889,9 +889,9 @@ const fetchElecRecords = async () => {
                   { label: 'Paid', value: paidCount, icon: <CheckCircle size={20} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
                   { label: 'Pending', value: pendingCount, icon: <Zap size={20} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
-                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[28px] p-3 border border-white/10 shadow-2xl">
+                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl rounded-[28px] p-3 border border-white/10 shadow-2xl">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-zinc-400 text-sm font-medium">{label}</p>
+                      <p className="text-sm font-medium text-white">{label}</p>
                       <div className={`p-2 hidden md:block rounded-xl border ${iconBg}`}>{icon}</div>
                     </div>
                     <p className="text-lg text-left md:text-4xl font-black text-white">{value}</p>
