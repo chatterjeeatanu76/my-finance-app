@@ -894,7 +894,7 @@ const fetchElecRecords = async () => {
                       <p className="text-zinc-400 text-sm font-medium">{label}</p>
                       <div className={`p-2 hidden md:block rounded-xl border ${iconBg}`}>{icon}</div>
                     </div>
-                    <p className="text-4xl font-black text-white">{value}</p>
+                    <p className="text-lg text-left md:text-4xl font-black text-white">{value}</p>
                   </div>
                 ))}
               </div>
