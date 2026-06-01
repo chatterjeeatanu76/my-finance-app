@@ -115,7 +115,7 @@ const fetchElecRecords = async () => {
         month,
         updated_at
       `)
-      .order('flat_no', { ascending: true })
+      .order('flat_no','usn', { ascending: true })
 
     if (error) throw error
 
