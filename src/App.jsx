@@ -987,6 +987,7 @@ const fetchElecRecords = async () => {
                         {filtered.map((record, idx) => (
                           <tr key={record.id || idx} className={`border-b border-white/5 transition-colors hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
                             <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
+                          {/*}  
                             <td className="px-6 py-4">
                               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                                 record.status === 'paid'
@@ -996,6 +997,7 @@ const fetchElecRecords = async () => {
                                 {record.status === 'paid' ? 'Paid' : 'Pending'}
                               </span>
                             </td>
+                          */}
                             <td className="px-6 py-4 text-zinc-300">
                               {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
                             </td>
