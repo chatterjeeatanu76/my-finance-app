@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw
+  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
@@ -85,40 +85,10 @@ export default function FinanceApp() {
   const [reportView, setReportView] = useState('table')
   const [activePage, setActivePage] = useState('home')
 
-  // ── Electricity Tracker state ──
-  const [elecRecords, setElecRecords] = useState([])
-  const [elecLoading, setElecLoading] = useState(false)
-  const [elecSearch, setElecSearch] = useState('')
-  const [elecMonthFilter, setElecMonthFilter] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
-  const [elecStatusFilter, setElecStatusFilter] = useState('all')
-
   const showToast = (type, message) => {
     setToast({ type, message })
     setTimeout(() => setToast(null), 3000)
   }
-
-  const fetchElecRecords = async () => {
-    setElecLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('electricity_tracker')
-        .select('*')
-        .order('flat_no', { ascending: true })
-      if (error) throw error
-      setElecRecords(data || [])
-    } catch (error) {
-      showToast('error', 'Failed to load electricity data: ' + error.message)
-    } finally {
-      setElecLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (activePage === 'electricity') fetchElecRecords()
-  }, [activePage])
 
   useEffect(() => { fetchTransactions() }, [])
 
@@ -327,7 +297,7 @@ export default function FinanceApp() {
               <p className="text-zinc-400 mt-2">Green Meadows : Bloak - A</p>
             </div>
             <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
-              {['home', 'reports', 'electricity'].map(page => (
+              {['home', 'reports'].map(page => (
                 <button key={page} onClick={() => setActivePage(page)}
                   className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
                   {page}
@@ -828,185 +798,10 @@ export default function FinanceApp() {
           </div>
         )}
 
-        {/* Electricity Tracker Page */}
-        {activePage === 'electricity' && (() => {
-          const now = new Date()
-          const [filterYear, filterMonth] = elecMonthFilter.split('-')
-          const monthName = new Date(Number(filterYear), Number(filterMonth) - 1).toLocaleString('default', { month: 'long' })
-
-          const filtered = elecRecords.filter(r => {
-            const matchMonth = !elecMonthFilter || r.month === elecMonthFilter
-            const matchSearch = !elecSearch || r.flat_no?.toLowerCase().includes(elecSearch.toLowerCase())
-            const matchStatus = elecStatusFilter === 'all' || r.status === elecStatusFilter
-            return matchMonth && matchSearch && matchStatus
-          })
-
-          const totalFlats = filtered.length
-          const paidCount = filtered.filter(r => r.status === 'paid').length
-          const pendingCount = filtered.filter(r => r.status !== 'paid').length
-
-          // Generate month options: last 12 months
-          const monthOptions = []
-          for (let i = 0; i < 12; i++) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-            const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-            const label = d.toLocaleString('default', { month: 'long', year: 'numeric' })
-            monthOptions.push({ val, label })
-          }
-
-          return (
-            <div className="space-y-6">
-              {/* Page Title */}
-{/*}
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">Green Meadows : Block A</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">Electricity Tracker</h2>
-                    <span className="bg-blue-900/60 border border-blue-700 text-blue-300 text-sm font-semibold px-3 py-1 rounded-xl">{elecMonthFilter}</span>
-                  </div>
-                </div>
-              </div>
-/*}
-              {/* Summary Cards */}
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { label: 'Total Flats', value: totalFlats, icon: <Zap size={20} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
-                  { label: 'Paid', value: paidCount, icon: <CheckCircle size={20} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
-                  { label: 'Pending', value: pendingCount, icon: <Zap size={20} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
-                ].map(({ label, value, icon, iconBg }) => (
-                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[28px] p-5 border border-white/10 shadow-2xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-zinc-400 text-sm font-medium">{label}</p>
-                      <div className={`p-2 rounded-xl border ${iconBg}`}>{icon}</div>
-                    </div>
-                    <p className="text-4xl font-black text-white">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                <div
-                  className="bg-green-500 h-1.5 rounded-full transition-all duration-700"
-                  style={{ width: totalFlats > 0 ? `${(paidCount / totalFlats) * 100}%` : '0%' }}
-                />
-              </div>
-
-              {/* Filters Row */}
-              <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-                {/* Search */}
-                <div className="relative flex-1">
-                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                  </svg>
-                  <input
-                    type="text"
-                    value={elecSearch}
-                    onChange={e => setElecSearch(e.target.value)}
-                    placeholder="Search flat no..."
-                    className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl pl-10 pr-4 py-3 outline-none text-white placeholder:text-zinc-500 text-sm"
-                  />
-                </div>
-                {/* Month */}
-                <select
-                  value={elecMonthFilter}
-                  onChange={e => setElecMonthFilter(e.target.value)}
-                  className="bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white text-sm"
-                >
-                  {monthOptions.map(o => (
-                    <option key={o.val} value={o.val} className="bg-zinc-800">{o.label}</option>
-                  ))}
-                </select>
-                {/* Status Filter */}
-                <div className="flex bg-zinc-800 rounded-2xl p-1 gap-1">
-                  {['all', 'paid', 'pending'].map(s => (
-                    <button
-                      key={s}
-                      onClick={() => setElecStatusFilter(s)}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all ${
-                        elecStatusFilter === s
-                          ? s === 'paid' ? 'bg-green-500 text-white'
-                            : s === 'pending' ? 'bg-red-500 text-white'
-                            : 'bg-white text-black'
-                          : 'text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      {s === 'all' ? 'All' : s === 'paid' ? 'Paid' : 'Pending'}
-                    </button>
-                  ))}
-                </div>
-                {/* Refresh */}
-                <button
-                  onClick={fetchElecRecords}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 transition-colors text-white px-5 py-3 rounded-2xl text-sm font-semibold"
-                >
-                  <RefreshCw size={15} className={elecLoading ? 'animate-spin' : ''} />
-                  Refresh
-                </button>
-              </div>
-
-              {/* Table */}
-              <div className="bg-white/5 backdrop-blur-xl rounded-[28px] border border-white/10 shadow-2xl overflow-hidden">
-                {elecLoading ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 size={32} className="animate-spin text-zinc-400" />
-                    <p className="text-zinc-500 text-sm">Loading electricity data...</p>
-                  </div>
-                ) : filtered.length === 0 ? (
-                  <div className="text-center py-20 text-zinc-500">
-                    <Zap size={40} className="mx-auto mb-3 opacity-30" />
-                    <p>No records found for the selected filters.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-zinc-900/80 border-b border-white/10">
-                          <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Flat No.</th>
-                          <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Amount</th>
-                          <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">USN No.</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.map((record, idx) => (
-                          <tr key={record.id || idx} className={`border-b border-white/5 transition-colors hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
-                            <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                                record.status === 'paid'
-                                  ? 'bg-green-900/50 text-green-400 border border-green-700'
-                                  : 'bg-red-900/50 text-red-400 border border-red-700'
-                              }`}>
-                                {record.status === 'paid' ? 'Paid' : 'Pending'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-zinc-300">
-                              {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
-                            </td>
-                            <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
-                              {record.usn_no || '—'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })()}
-
         {/* Mobile Bottom Nav */}
         <div className={`fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${navVisible ? 'translate-y-0' : 'translate-y-28'}`}>
           <div className="flex items-center justify-between">
-            {[
-              { page: 'home', icon: <Home size={20} />, label: 'Home' },
-              { page: 'electricity', icon: <Zap size={20} />, label: 'Electricity' },
-              { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' },              
-            ].map(({ page, icon, label }) => (
+            {[{ page: 'home', icon: <Home size={20} />, label: 'Home' }, { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' }].map(({ page, icon, label }) => (
               <button key={page} onClick={() => setActivePage(page)} className={`flex flex-col items-center gap-1 text-xs ${activePage === page ? 'text-white' : 'text-zinc-500'}`}>{icon}{label}</button>
             ))}
           </div>
