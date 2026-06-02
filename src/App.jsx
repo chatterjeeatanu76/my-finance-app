@@ -839,11 +839,13 @@ export default function FinanceApp() {
           const now = new Date()
           const [filterYear, filterMonth] = elecMonthFilter.split('-')
 
-          // All records for selected month (unaffected by search/status filters)
+          // Total is always fixed at 55 flats
+          const TOTAL_FLATS = 55
+
+          // Paid/Pending counts from actual DB records for selected month
           const allForMonth = elecRecords.filter(r => !elecMonthFilter || r.month === elecMonthFilter)
-          const totalFlats = allForMonth.length
           const paidCount = allForMonth.filter(r => r.paid === true).length
-          const pendingCount = allForMonth.filter(r => r.paid !== true).length
+          const pendingCount = TOTAL_FLATS - paidCount
 
           const filtered = elecRecords.filter(r => {
             const matchMonth = !elecMonthFilter || r.month === elecMonthFilter
@@ -860,12 +862,18 @@ export default function FinanceApp() {
             monthOptions.push({ val, label })
           }
 
+          // Build pending rows: all 55 flats minus paid ones
+          const paidFlatNos = new Set(allForMonth.filter(r => r.paid === true).map(r => r.flat_no))
+          const pendingRows = flatNumbers.filter(f => !paidFlatNos.has(f)).filter(f =>
+            !elecSearch || f.toLowerCase().includes(elecSearch.toLowerCase())
+          )
+
           return (
             <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-2 md:gap-4">
                 {[
-                  { label: 'Total Flats', value: totalFlats, icon: <Zap size={18} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
+                  { label: 'Total Flats', value: TOTAL_FLATS, icon: <Zap size={18} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
                   { label: 'Paid', value: paidCount, icon: <CheckCircle size={18} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
                   { label: 'Pending', value: pendingCount, icon: <Zap size={18} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
@@ -883,7 +891,7 @@ export default function FinanceApp() {
               <div className="w-full bg-zinc-800 rounded-full h-1.5">
                 <div
                   className="bg-green-500 h-1.5 rounded-full transition-all duration-700"
-                  style={{ width: totalFlats > 0 ? `${(paidCount / totalFlats) * 100}%` : '0%' }}
+                  style={{ width: `${(paidCount / TOTAL_FLATS) * 100}%` }}
                 />
               </div>
 
@@ -943,11 +951,6 @@ export default function FinanceApp() {
                     <Loader2 size={32} className="animate-spin text-zinc-400" />
                     <p className="text-zinc-500 text-sm">Loading electricity data...</p>
                   </div>
-                ) : filtered.length === 0 ? (
-                  <div className="text-center py-20 text-zinc-500">
-                    <Zap size={40} className="mx-auto mb-3 opacity-30" />
-                    <p>No records found for the selected filters.</p>
-                  </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -959,17 +962,34 @@ export default function FinanceApp() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filtered.map((record, idx) => (
-                          <tr key={record.id || idx} className={`border-b border-white/5 transition-colors hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
-                            <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
-                            <td className="px-6 py-4 text-zinc-300">
-                              {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
-                            </td>
-                            <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
-                              {record.usn || '—'}
-                            </td>
-                          </tr>
-                        ))}
+                        {elecStatusFilter === 'pending' ? (
+                          pendingRows.length === 0 ? (
+                            <tr><td colSpan={3} className="text-center py-16 text-zinc-500">
+                              <Zap size={36} className="mx-auto mb-2 opacity-30" />
+                              <p className="text-sm">All flats have paid!</p>
+                            </td></tr>
+                          ) : pendingRows.map((flatNo, idx) => (
+                            <tr key={flatNo} className={`border-b border-white/5 hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
+                              <td className="px-6 py-4 font-bold text-white">{flatNo}</td>
+                              <td className="px-6 py-4 text-zinc-600">—</td>
+                              <td className="px-6 py-4 text-zinc-600">—</td>
+                            </tr>
+                          ))
+                        ) : filtered.length === 0 ? (
+                          <tr><td colSpan={3} className="text-center py-16 text-zinc-500 text-sm">No records found.</td></tr>
+                        ) : (
+                          filtered.map((record, idx) => (
+                            <tr key={record.id || idx} className={`border-b border-white/5 hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
+                              <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
+                              <td className="px-6 py-4 text-zinc-300">
+                                {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
+                              </td>
+                              <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
+                                {record.usn || '—'}
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
