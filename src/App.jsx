@@ -111,6 +111,7 @@ export default function FinanceApp() {
           month,
           updated_at
         `)
+        .eq('month', elecMonthFilter)
         .order('flat_no', { ascending: true })
       if (error) throw error
       setElecRecords(data || [])
@@ -123,7 +124,7 @@ export default function FinanceApp() {
 
   useEffect(() => {
     if (activePage === 'electricity') fetchElecRecords()
-  }, [activePage])
+  }, [activePage, elecMonthFilter])
 
   useEffect(() => { fetchTransactions() }, [])
 
@@ -862,11 +863,13 @@ export default function FinanceApp() {
             monthOptions.push({ val, label })
           }
 
-          // Build pending rows: all 55 flats minus paid ones
-          const paidFlatNos = new Set(allForMonth.filter(r => r.paid === true).map(r => r.flat_no))
-          const pendingRows = flatNumbers.filter(f => !paidFlatNos.has(f)).filter(f =>
-            !elecSearch || f.toLowerCase().includes(elecSearch.toLowerCase())
+          // Build pending rows: all 55 flats minus those marked paid in DB for this month
+          const paidFlatNos = new Set(
+            allForMonth.filter(r => r.paid === true).map(r => r.flat_no)
           )
+          const pendingRows = flatNumbers
+            .filter(f => !paidFlatNos.has(f))
+            .filter(f => !elecSearch || f.toLowerCase().includes(elecSearch.toLowerCase()))
 
           return (
             <div className="space-y-6">
