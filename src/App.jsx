@@ -843,7 +843,7 @@ export default function FinanceApp() {
           // Total is always fixed at 55 flats
           const TOTAL_FLATS = 55
 
-          // Paid/Pending counts from actual DB records for selected month
+          // All records for selected month (unaffected by search/status filters)
           const allForMonth = elecRecords.filter(r => !elecMonthFilter || r.month === elecMonthFilter)
           const paidCount = allForMonth.filter(r => r.paid === true).length
           const pendingCount = TOTAL_FLATS - paidCount
@@ -863,12 +863,15 @@ export default function FinanceApp() {
             monthOptions.push({ val, label })
           }
 
-          // Build pending rows: all 55 flats minus those marked paid in DB for this month
+          // Normalize flat_no: strip "Flat-" prefix for comparison
+          const normalizeFlatNo = (f) => f?.replace(/^Flat-/i, '').trim()
+
+          // Build paid set using normalized flat numbers
           const paidFlatNos = new Set(
-            allForMonth.filter(r => r.paid === true).map(r => r.flat_no)
+            allForMonth.filter(r => r.paid === true).map(r => normalizeFlatNo(r.flat_no))
           )
           const pendingRows = flatNumbers
-            .filter(f => !paidFlatNos.has(f))
+            .filter(f => !paidFlatNos.has(normalizeFlatNo(f)))
             .filter(f => !elecSearch || f.toLowerCase().includes(elecSearch.toLowerCase()))
 
           return (
