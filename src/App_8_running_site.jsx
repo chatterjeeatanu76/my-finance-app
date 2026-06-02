@@ -16,12 +16,14 @@ const supabase = createClient(
 
 const BUDGET_LIMIT = 85000
 
+// Helper: format ISO date string (yyyy-mm-dd) to dd/mm/yyyy for display
 function formatDateDisplay(isoDate) {
   if (!isoDate) return ''
   const [y, m, d] = isoDate.split('-')
   return `${d}/${m}/${y}`
 }
 
+// Helper: parse dd/mm/yyyy input back to yyyy-mm-dd for storage
 function parseDateInput(ddmmyyyy) {
   if (!ddmmyyyy) return ''
   const parts = ddmmyyyy.split('/')
@@ -46,11 +48,12 @@ export default function FinanceApp() {
   const [amount, setAmount] = useState('')
   const [type, setType] = useState('expense')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [category, setCategory] = useState('Maintenance Cost')
+  const [category, setCategory] = useState('Food')
   const [flatNo, setFlatNo] = useState('')
   const [otherCategory, setOtherCategory] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editFields, setEditFields] = useState({})
+  // For edit mode: track if the category is "Others" (custom)
   const [editOtherCategory, setEditOtherCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
@@ -97,29 +100,35 @@ export default function FinanceApp() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const fetchElecRecords = async () => {
-    setElecLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('electricity_payments')
-        .select(`
-          id,
-          flat_no,
-          amount,
-          usn,
-          paid,
-          month,
-          updated_at
-        `)
-        .order('flat_no', { ascending: true })
-      if (error) throw error
-      setElecRecords(data || [])
-    } catch (error) {
-      showToast('error', 'Failed to load electricity payments: ' + error.message)
-    } finally {
-      setElecLoading(false)
-    }
+const fetchElecRecords = async () => {
+  setElecLoading(true)
+
+  try {
+    const { data, error } = await supabase
+      .from('electricity_payments')
+      .select(`
+        id,
+        flat_no,
+        amount,
+        usn,
+        paid,
+        month,
+        updated_at
+      `)
+      .order('flat_no','usn', { ascending: true })
+
+    if (error) throw error
+
+    setElecRecords(data || [])
+  } catch (error) {
+    showToast(
+      'error',
+      'Failed to load electricity payments: ' + error.message
+    )
+  } finally {
+    setElecLoading(false)
   }
+}
 
   useEffect(() => {
     if (activePage === 'electricity') fetchElecRecords()
@@ -194,7 +203,7 @@ export default function FinanceApp() {
       const { data, error } = await supabase.from('transactions').insert([newTransaction]).select()
       if (error) throw error
       setTransactions(prev => [data[0], ...prev])
-      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Maintenance Cost'); setFlatNo(''); setOtherCategory('')
+      setAmount(''); setDate(new Date().toISOString().split('T')[0]); setCategory('Food'); setFlatNo(''); setOtherCategory('')
       showToast('success', 'Transaction saved!')
       if (type === 'expense') setBudgetDismissed(false)
     } catch (error) {
@@ -206,6 +215,7 @@ export default function FinanceApp() {
 
   const editTransaction = (item) => {
     setEditingId(item.id)
+    // Determine if category is custom (Others)
     const isCustom = isCustomCategory(item.category)
     setEditFields({
       amount: item.amount,
@@ -299,7 +309,7 @@ export default function FinanceApp() {
                   <h3 className="text-red-300 font-bold text-base">⚠️ Monthly Budget Exceeded!</h3>
                   <p className="text-red-400 text-sm mt-1">
                     You've spent <span className="text-white font-bold">₹ {currentMonthExpense.toLocaleString()}</span> this month,
-                    which is <span className="text-white font-bold">₹ {Math.abs(budgetRemaining).toLocaleString()}</span> over your ₹85,000 budget.
+                    which is <span className="text-white font-bold">₹ {Math.abs(budgetRemaining).toLocaleString()}</span> over your ₹15,000 budget.
                   </p>
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-red-400 mb-1">
@@ -328,7 +338,7 @@ export default function FinanceApp() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
-              <p className="text-zinc-400 mt-2">Green Meadows : Block - A</p>
+              <p className="text-zinc-400 mt-2">Green Meadows : Bloak - A</p>
             </div>
             <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
               {['home', 'reports', 'electricity'].map(page => (
@@ -341,8 +351,8 @@ export default function FinanceApp() {
           </div>
         </div>
 
-        {/* Budget Warning Bar — only show on home page */}
-        {activePage === 'home' && currentMonthExpense > 0 && (
+        {/* Budget Warning Bar */}
+        {currentMonthExpense > 0 && (
           <div className={`rounded-[24px] p-5 mb-5 border ${
             currentMonthExpense >= BUDGET_LIMIT
               ? 'bg-red-950/50 border-red-800'
@@ -398,24 +408,22 @@ export default function FinanceApp() {
           </div>
         )}
 
-        {/* Summary Cards — only on home page */}
-        {activePage === 'home' && (
-          <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-5">
-            {[
-              { label: 'Balance', value: `₹ ${balance.toLocaleString()}`, icon: <Wallet size={16} />, color: '' },
-              { label: 'Income', value: `₹ ${totalIncome.toLocaleString()}`, icon: <TrendingUp size={16} className="text-green-400" />, color: 'text-green-400' },
-              { label: 'Expenses', value: `₹ ${totalExpense.toLocaleString()}`, icon: <TrendingDown size={16} className="text-red-400" />, color: 'text-red-400' },
-            ].map(({ label, value, icon, color }) => (
-              <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-[28px] p-3 md:p-6 border border-white/10 shadow-2xl">
-                <div className="flex items-center justify-between mb-1 md:mb-3">
-                  <h2 className="text-[11px] md:text-lg font-medium leading-tight">{label}</h2>
-                  <span className="hidden md:block">{icon}</span>
-                </div>
-                <p className={`text-lg text-left md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-5">
+          {[
+            { label: 'Balance', value: `₹ ${balance.toLocaleString()}`, icon: <Wallet size={16} />, color: '' },
+            { label: 'Income', value: `₹ ${totalIncome.toLocaleString()}`, icon: <TrendingUp size={16} className="text-green-400" />, color: 'text-green-400' },
+            { label: 'Expenses', value: `₹ ${totalExpense.toLocaleString()}`, icon: <TrendingDown size={16} className="text-red-400" />, color: 'text-red-400' },
+          ].map(({ label, value, icon, color }) => (
+            <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-[28px] p-3 md:p-6 border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-1 md:mb-3">
+                <h2 className="text-[11px] md:text-lg font-medium leading-tight">{label}</h2>
+                <span className="hidden md:block">{icon}</span>
               </div>
-            ))}
-          </div>
-        )}
+              <p className={`text-lg text-left md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
+            </div>
+          ))}
+        </div>
 
         {/* Home Page */}
         {activePage === 'home' && (
@@ -624,7 +632,7 @@ export default function FinanceApp() {
                               </div>
                             )}
 
-                            {/* Save/Cancel row for income type */}
+                            {/* Save/Cancel row for income type (after flat no) */}
                             {editFields.type === 'income' && (
                               <div className="flex gap-2">
                                 <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
@@ -838,18 +846,20 @@ export default function FinanceApp() {
         {activePage === 'electricity' && (() => {
           const now = new Date()
           const [filterYear, filterMonth] = elecMonthFilter.split('-')
+          const monthName = new Date(Number(filterYear), Number(filterMonth) - 1).toLocaleString('default', { month: 'long' })
 
           const filtered = elecRecords.filter(r => {
             const matchMonth = !elecMonthFilter || r.month === elecMonthFilter
             const matchSearch = !elecSearch || r.flat_no?.toLowerCase().includes(elecSearch.toLowerCase())
-            const matchStatus = elecStatusFilter === 'all' || (elecStatusFilter === 'paid' ? r.paid === true : r.paid !== true)
+            const matchStatus = elecStatusFilter === 'all' || r.status === elecStatusFilter
             return matchMonth && matchSearch && matchStatus
           })
 
           const totalFlats = filtered.length
-          const paidCount = filtered.filter(r => r.paid === true).length
-          const pendingCount = filtered.filter(r => r.paid !== true).length
+          const paidCount = filtered.filter(r => r.status === 'paid').length
+          const pendingCount = filtered.filter(r => r.status !== 'paid').length
 
+          // Generate month options: last 12 months
           const monthOptions = []
           for (let i = 0; i < 12; i++) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
@@ -860,6 +870,18 @@ export default function FinanceApp() {
 
           return (
             <div className="space-y-6">
+              {/* Page Title */}
+{/*}
+              <div className="flex items-center gap-4">
+                <div>
+                  <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">Green Meadows : Block A</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">Electricity Tracker</h2>
+                    <span className="bg-blue-900/60 border border-blue-700 text-blue-300 text-sm font-semibold px-3 py-1 rounded-xl">{elecMonthFilter}</span>
+                  </div>
+                </div>
+              </div>
+*/}
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4">
                 {[
@@ -867,12 +889,12 @@ export default function FinanceApp() {
                   { label: 'Paid', value: paidCount, icon: <CheckCircle size={20} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
                   { label: 'Pending', value: pendingCount, icon: <Zap size={20} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
-                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[28px] p-5 border border-white/10 shadow-2xl">
+                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl rounded-[28px] p-3 border border-white/10 shadow-2xl">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-zinc-400 text-sm font-medium">{label}</p>
-                      <div className={`p-2 rounded-xl border ${iconBg}`}>{icon}</div>
+                      <p className="text-sm font-medium text-white">{label}</p>
+                      <div className={`p-2 hidden md:block rounded-xl border ${iconBg}`}>{icon}</div>
                     </div>
-                    <p className="text-4xl font-black text-white">{value}</p>
+                    <p className="text-lg text-left md:text-4xl font-black text-white">{value}</p>
                   </div>
                 ))}
               </div>
@@ -887,6 +909,7 @@ export default function FinanceApp() {
 
               {/* Filters Row */}
               <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+                {/* Search */}
                 <div className="relative flex-1">
                   <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -899,6 +922,7 @@ export default function FinanceApp() {
                     className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl pl-10 pr-4 py-3 outline-none text-white placeholder:text-zinc-500 text-sm"
                   />
                 </div>
+                {/* Month */}
                 <select
                   value={elecMonthFilter}
                   onChange={e => setElecMonthFilter(e.target.value)}
@@ -908,6 +932,8 @@ export default function FinanceApp() {
                     <option key={o.val} value={o.val} className="bg-zinc-800">{o.label}</option>
                   ))}
                 </select>
+                {/* Status Filter */}
+              {/*  
                 <div className="flex bg-zinc-800 rounded-2xl p-1 gap-1">
                   {['all', 'paid', 'pending'].map(s => (
                     <button
@@ -925,6 +951,9 @@ export default function FinanceApp() {
                     </button>
                   ))}
                 </div>
+
+                */}
+                {/* Refresh */}
                 <button
                   onClick={fetchElecRecords}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 transition-colors text-white px-5 py-3 rounded-2xl text-sm font-semibold"
@@ -952,6 +981,7 @@ export default function FinanceApp() {
                       <thead>
                         <tr className="bg-zinc-900/80 border-b border-white/10">
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Flat No.</th>
+                        {/*  <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Status</th>  */}
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Amount</th>
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">USN No.</th>
                         </tr>
@@ -960,6 +990,17 @@ export default function FinanceApp() {
                         {filtered.map((record, idx) => (
                           <tr key={record.id || idx} className={`border-b border-white/5 transition-colors hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
                             <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
+                          {/*}  
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                                record.status === 'paid'
+                                  ? 'bg-green-900/50 text-green-400 border border-green-700'
+                                  : 'bg-red-900/50 text-red-400 border border-red-700'
+                              }`}>
+                                {record.status === 'paid' ? 'Paid' : 'Pending'}
+                              </span>
+                            </td>
+                          */}
                             <td className="px-6 py-4 text-zinc-300">
                               {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
                             </td>
@@ -983,7 +1024,7 @@ export default function FinanceApp() {
             {[
               { page: 'home', icon: <Home size={20} />, label: 'Home' },
               { page: 'electricity', icon: <Zap size={20} />, label: 'Electricity' },
-              { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' },
+              { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' },              
             ].map(({ page, icon, label }) => (
               <button key={page} onClick={() => setActivePage(page)} className={`flex flex-col items-center gap-1 text-xs ${activePage === page ? 'text-white' : 'text-zinc-500'}`}>{icon}{label}</button>
             ))}
