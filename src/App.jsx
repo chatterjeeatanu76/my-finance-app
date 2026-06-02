@@ -839,16 +839,18 @@ export default function FinanceApp() {
           const now = new Date()
           const [filterYear, filterMonth] = elecMonthFilter.split('-')
 
+          // All records for selected month (unaffected by search/status filters)
+          const allForMonth = elecRecords.filter(r => !elecMonthFilter || r.month === elecMonthFilter)
+          const totalFlats = allForMonth.length
+          const paidCount = allForMonth.filter(r => r.paid === true).length
+          const pendingCount = allForMonth.filter(r => r.paid !== true).length
+
           const filtered = elecRecords.filter(r => {
             const matchMonth = !elecMonthFilter || r.month === elecMonthFilter
             const matchSearch = !elecSearch || r.flat_no?.toLowerCase().includes(elecSearch.toLowerCase())
             const matchStatus = elecStatusFilter === 'all' || (elecStatusFilter === 'paid' ? r.paid === true : r.paid !== true)
             return matchMonth && matchSearch && matchStatus
           })
-
-          const totalFlats = filtered.length
-          const paidCount = filtered.filter(r => r.paid === true).length
-          const pendingCount = filtered.filter(r => r.paid !== true).length
 
           const monthOptions = []
           for (let i = 0; i < 12; i++) {
@@ -861,18 +863,18 @@ export default function FinanceApp() {
           return (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
                 {[
-                  { label: 'Total Flats', value: totalFlats, icon: <Zap size={20} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
-                  { label: 'Paid', value: paidCount, icon: <CheckCircle size={20} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
-                  { label: 'Pending', value: pendingCount, icon: <Zap size={20} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
+                  { label: 'Total Flats', value: totalFlats, icon: <Zap size={18} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
+                  { label: 'Paid', value: paidCount, icon: <CheckCircle size={18} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
+                  { label: 'Pending', value: pendingCount, icon: <Zap size={18} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
-                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[28px] p-5 border border-white/10 shadow-2xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-zinc-400 text-sm font-medium">{label}</p>
-                      <div className={`p-2 rounded-xl border ${iconBg}`}>{icon}</div>
+                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[20px] md:rounded-[28px] p-3 md:p-5 border border-white/10 shadow-2xl">
+                    <div className="flex items-center justify-between mb-2 md:mb-3">
+                      <p className="text-zinc-400 text-[11px] md:text-sm font-medium leading-tight">{label}</p>
+                      <div className={`p-1.5 md:p-2 rounded-xl border flex-shrink-0 ${iconBg}`}>{icon}</div>
                     </div>
-                    <p className="text-4xl font-black text-white">{value}</p>
+                    <p className="text-2xl md:text-4xl font-black text-white">{value}</p>
                   </div>
                 ))}
               </div>
