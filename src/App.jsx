@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw, Landmark
+  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
@@ -29,7 +29,7 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
+const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Corpus Fund', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
 
 function isCustomCategory(cat) {
   return cat && !STANDARD_CATEGORIES.includes(cat)
@@ -92,23 +92,6 @@ export default function FinanceApp() {
   })
   const [elecStatusFilter, setElecStatusFilter] = useState('all')
 
-  // ── Corpus Fund state ──
-  const [corpusTransactions, setCorpusTransactions] = useState([])
-  const [corpusLoading, setCorpusLoading] = useState(false)
-  const [corpusSaving, setCorpusSaving] = useState(false)
-  const [corpusAmount, setCorpusAmount] = useState('')
-  const [corpusDate, setCorpusDate] = useState(new Date().toISOString().split('T')[0])
-  const [corpusType, setCorpusType] = useState('expense')
-  const [corpusCategory, setCorpusCategory] = useState('Corpus Fund Expense')
-  const [corpusOtherCategory, setCorpusOtherCategory] = useState('')
-  const [corpusSearchQuery, setCorpusSearchQuery] = useState('')
-  const [corpusSelectedMonth, setCorpusSelectedMonth] = useState('')
-  const [corpusEditingId, setCorpusEditingId] = useState(null)
-  const [corpusEditFields, setCorpusEditFields] = useState({})
-  const [corpusEditOther, setCorpusEditOther] = useState('')
-
-  const CORPUS_CATEGORIES = ['Corpus Fund Expense', 'Maintenance', 'Repair', 'Legal', 'Construction', 'Equipment', 'Others']
-
   const showToast = (type, message) => {
     setToast({ type, message })
     setTimeout(() => setToast(null), 3000)
@@ -142,83 +125,6 @@ export default function FinanceApp() {
   useEffect(() => {
     if (activePage === 'electricity') fetchElecRecords()
   }, [activePage, elecMonthFilter])
-
-  // ── Corpus Fund functions ──
-  const fetchCorpusTransactions = async () => {
-    setCorpusLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('corpus_transactions')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      setCorpusTransactions(data || [])
-    } catch (error) {
-      showToast('error', 'Failed to load corpus data: ' + error.message)
-    } finally {
-      setCorpusLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (activePage === 'corpus') fetchCorpusTransactions()
-  }, [activePage])
-
-  const addCorpusTransaction = async () => {
-    if (!corpusAmount || !corpusDate || (corpusCategory === 'Others' && !corpusOtherCategory.trim())) {
-      showToast('error', 'Please fill in all fields')
-      return
-    }
-    setCorpusSaving(true)
-    try {
-      const effCat = corpusCategory === 'Others' ? corpusOtherCategory.trim() : corpusCategory
-      const { data, error } = await supabase.from('corpus_transactions').insert([{
-        title: effCat, amount: Number(corpusAmount), type: corpusType, category: effCat, date: corpusDate
-      }]).select()
-      if (error) throw error
-      setCorpusTransactions(prev => [data[0], ...prev])
-      setCorpusAmount(''); setCorpusDate(new Date().toISOString().split('T')[0])
-      setCorpusCategory('Corpus Fund Expense'); setCorpusOtherCategory('')
-      showToast('success', 'Transaction saved!')
-    } catch (error) {
-      showToast('error', 'Failed to save: ' + error.message)
-    } finally {
-      setCorpusSaving(false)
-    }
-  }
-
-  const editCorpusTransaction = (item) => {
-    setCorpusEditingId(item.id)
-    const isCustom = item.category && !CORPUS_CATEGORIES.includes(item.category)
-    setCorpusEditFields({
-      amount: item.amount,
-      category: isCustom ? 'Others' : item.category,
-      date: item.date,
-      type: item.type,
-    })
-    setCorpusEditOther(isCustom ? item.category : '')
-  }
-
-  const saveCorpusEdit = async () => {
-    if (!corpusEditFields.amount || !corpusEditFields.date) return
-    if (corpusEditFields.category === 'Others' && !corpusEditOther.trim()) {
-      showToast('error', 'Please specify the category'); return
-    }
-    const effCat = corpusEditFields.category === 'Others' ? corpusEditOther.trim() : corpusEditFields.category
-    try {
-      const { error } = await supabase.from('corpus_transactions').update({
-        title: effCat, amount: Number(corpusEditFields.amount), category: effCat, date: corpusEditFields.date
-      }).eq('id', corpusEditingId)
-      if (error) throw error
-      setCorpusTransactions(prev => prev.map(t => t.id === corpusEditingId
-        ? { ...t, title: effCat, amount: Number(corpusEditFields.amount), category: effCat, date: corpusEditFields.date }
-        : t))
-      setCorpusEditingId(null); setCorpusEditFields({}); setCorpusEditOther('')
-      showToast('success', 'Transaction updated!')
-    } catch (error) {
-      showToast('error', 'Failed to update: ' + error.message)
-    }
-  }
 
   useEffect(() => { fetchTransactions() }, [])
 
@@ -426,10 +332,10 @@ export default function FinanceApp() {
               <p className="text-zinc-400 mt-2">Green Meadows : Block - A</p>
             </div>
             <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
-              {['home', 'reports', 'corpus', 'electricity'].map(page => (
+              {['home', 'reports', 'electricity'].map(page => (
                 <button key={page} onClick={() => setActivePage(page)}
                   className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
-                  {page === 'corpus' ? 'Corpus Fund' : page}
+                  {page}
                 </button>
               ))}
             </div>
@@ -1099,273 +1005,11 @@ export default function FinanceApp() {
           )
         })()}
 
-        {/* Corpus Fund Page */}
-        {activePage === 'corpus' && (() => {
-          const corpusIncome = corpusTransactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
-          const corpusExpense = corpusTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-          const corpusBalance = corpusIncome - corpusExpense
-
-          const q = corpusSearchQuery.trim().toLowerCase()
-          const corpusFiltered = corpusTransactions.filter(t => {
-            const matchSearch = !q || (
-              t.category?.toLowerCase().includes(q) ||
-              t.title?.toLowerCase().includes(q) ||
-              String(t.amount).includes(q) ||
-              formatDateDisplay(t.date).includes(q)
-            )
-            const matchMonth = !corpusSelectedMonth || (t.date && t.date.split('-')[1] === corpusSelectedMonth)
-            return matchSearch && matchMonth
-          })
-
-          const noResultMsg = corpusSelectedMonth && !q
-            ? `No transactions in ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(corpusSelectedMonth)-1]}`
-            : `No results for "${corpusSearchQuery}"`
-
-          return (
-            <div className="flex flex-col gap-8">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-3 gap-2 md:gap-6">
-                {[
-                  { label: 'Balance', value: `₹ ${corpusBalance.toLocaleString()}`, icon: <Wallet size={16} />, color: '' },
-                  { label: 'Income', value: `₹ ${corpusIncome.toLocaleString()}`, icon: <TrendingUp size={16} className="text-green-400" />, color: 'text-green-400' },
-                  { label: 'Expenses', value: `₹ ${corpusExpense.toLocaleString()}`, icon: <TrendingDown size={16} className="text-red-400" />, color: 'text-red-400' },
-                ].map(({ label, value, icon, color }) => (
-                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-[28px] p-3 md:p-6 border border-white/10 shadow-2xl">
-                    <div className="flex items-center justify-between mb-1 md:mb-3">
-                      <h2 className="text-[11px] md:text-lg font-medium leading-tight">{label}</h2>
-                      <span className="hidden md:block">{icon}</span>
-                    </div>
-                    <p className={`text-lg text-left md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Add Transaction */}
-              <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-3 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-                <div className="flex items-center gap-2 mb-6"><Plus /><h3 className="text-2x font-semibold">Add Transaction</h3></div>
-                <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
-                  {['expense', 'income'].map(t => (
-                    <button key={t} onClick={() => setCorpusType(t)}
-                      className={`flex-1 py-3 rounded-2xl font-medium transition-all capitalize ${corpusType === t ? (t === 'expense' ? 'bg-red-500 text-white' : 'bg-green-500 text-white') : 'text-zinc-400'}`}>
-                      {t}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex flex-col md:flex-row md:items-end gap-3">
-                  <div className="flex flex-col gap-1 md:flex-1">
-                    <input value={corpusDate} onChange={e => setCorpusDate(e.target.value)} type="date"
-                      className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white" />
-                  </div>
-                  <div className="flex flex-col gap-1 md:flex-[1.4]">
-                    <select value={corpusCategory} onChange={e => { setCorpusCategory(e.target.value); setCorpusOtherCategory('') }}
-                      className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
-                      {CORPUS_CATEGORIES.map(c => <option key={c} className="bg-zinc-800">{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1 md:flex-1">
-                    <input value={corpusAmount} onChange={e => setCorpusAmount(e.target.value)} type="number" min="0" placeholder="0"
-                      className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500" />
-                  </div>
-                  <div className="flex flex-col gap-1 md:flex-none">
-                    <button onClick={addCorpusTransaction} disabled={corpusSaving}
-                      className="w-full md:w-auto bg-gradient-to-r from-white to-zinc-300 text-black px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity whitespace-nowrap">
-                      {corpusSaving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : '+ Add'}
-                    </button>
-                  </div>
-                </div>
-                {corpusCategory === 'Others' && (
-                  <div className="mt-3">
-                    <input value={corpusOtherCategory} onChange={e => setCorpusOtherCategory(e.target.value.slice(0, 30))}
-                      placeholder="Please specify category..." maxLength={30}
-                      className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500" />
-                    <p className="text-xs text-zinc-500 mt-1 text-right">{corpusOtherCategory.length}/30</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Recent Transactions */}
-              <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-3 border border-white/10 shadow-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2x font-semibold">Recent Transactions</h2>
-                  <button onClick={fetchCorpusTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
-                    <Loader2 size={12} className={corpusLoading ? 'animate-spin' : ''} />
-                  </button>
-                </div>
-                {/* Search + Month */}
-                <div className="flex gap-2 mb-4">
-                  <div className="relative" style={{flex: '2'}}>
-                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" value={corpusSearchQuery} onChange={e => setCorpusSearchQuery(e.target.value)}
-                      placeholder="Search by category or amount..."
-                      className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl pl-10 pr-10 py-3 outline-none text-white placeholder:text-zinc-500 text-sm" />
-                    {corpusSearchQuery && (
-                      <button onClick={() => setCorpusSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors">
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <select value={corpusSelectedMonth} onChange={e => setCorpusSelectedMonth(e.target.value)}
-                    className="bg-zinc-800/70 border border-zinc-700 rounded-2xl px-3 py-3 outline-none text-white text-sm" style={{flex: '1'}}>
-                    <option value="">All Months</option>
-                    {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-                      <option key={m} value={String(i + 1).padStart(2, '0')} className="bg-zinc-800">{m}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {corpusLoading ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 size={32} className="animate-spin text-zinc-400" />
-                    <p className="text-zinc-500 text-sm">Loading...</p>
-                  </div>
-                ) : corpusTransactions.length === 0 ? (
-                  <div className="text-center py-20 text-zinc-500">
-                    <Landmark size={40} className="mx-auto mb-3 opacity-30" />
-                    <p>No corpus transactions yet. Add your first one!</p>
-                  </div>
-                ) : corpusFiltered.length === 0 ? (
-                  <div className="text-center py-16 text-zinc-500">
-                    <svg className="mx-auto mb-3 opacity-30" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <p className="text-sm">{noResultMsg}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                    {/* Desktop */}
-                    <div className="hidden md:block space-y-3">
-                      {corpusFiltered.map(item => (
-                        <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
-                          {corpusEditingId === item.id ? (
-                            <div className="flex flex-col gap-3">
-                              <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                  <p className="text-xs text-zinc-500 mb-1">Date</p>
-                                  <input type="date" value={corpusEditFields.date} onChange={e => setCorpusEditFields({...corpusEditFields, date: e.target.value})}
-                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white" />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-zinc-500 mb-1">Category</p>
-                                  <select value={corpusEditFields.category} onChange={e => { setCorpusEditFields({...corpusEditFields, category: e.target.value}); setCorpusEditOther('') }}
-                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white">
-                                    {CORPUS_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                                  </select>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-zinc-500 mb-1">Amount (₹)</p>
-                                  <input type="number" value={corpusEditFields.amount} onChange={e => setCorpusEditFields({...corpusEditFields, amount: e.target.value})}
-                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white" />
-                                </div>
-                              </div>
-                              {corpusEditFields.category === 'Others' && (
-                                <div>
-                                  <input value={corpusEditOther} onChange={e => setCorpusEditOther(e.target.value.slice(0, 30))}
-                                    placeholder="Please specify category..." maxLength={30}
-                                    className="w-full bg-zinc-800 border border-yellow-500/50 rounded-xl px-3 py-2 text-sm outline-none text-white placeholder:text-zinc-500" />
-                                  <p className="text-xs text-zinc-500 mt-1 text-right">{corpusEditOther.length}/30</p>
-                                </div>
-                              )}
-                              <div className="flex gap-2">
-                                <button onClick={saveCorpusEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                  <Check size={14} /> Save
-                                </button>
-                                <button onClick={() => { setCorpusEditingId(null); setCorpusEditFields({}); setCorpusEditOther('') }}
-                                  className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
-                                  <X size={14} /> Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between">
-                              <div className="text-left">
-                                <h3 className="font-semibold text-lg">{item.title}</h3>
-                                <p className="text-sm text-zinc-400">{formatDateDisplay(item.date)} • {item.category}</p>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                                  {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
-                                </p>
-                                <button onClick={() => editCorpusTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors p-1">
-                                  <Pencil size={18} />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Mobile */}
-                    <div className="md:hidden overflow-x-auto rounded-2xl border border-white/10">
-                      <table className="w-full text-left min-w-[440px]">
-                        <thead>
-                          <tr className="bg-zinc-900 border-b border-white/10">
-                            <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Category</th>
-                            <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Date</th>
-                            <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Amount</th>
-                            <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Edit</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {corpusFiltered.map((item, idx) => (
-                            <React.Fragment key={item.id}>
-                              <tr className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-800/40'}`}>
-                                {corpusEditingId === item.id ? (
-                                  <>
-                                    <td className="px-3 py-2" colSpan={3}>
-                                      <div className="flex gap-2 flex-wrap">
-                                        <input type="date" value={corpusEditFields.date} onChange={e => setCorpusEditFields({...corpusEditFields, date: e.target.value})}
-                                          className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]" />
-                                        <select value={corpusEditFields.category} onChange={e => { setCorpusEditFields({...corpusEditFields, category: e.target.value}); setCorpusEditOther('') }}
-                                          className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]">
-                                          {CORPUS_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                                        </select>
-                                        <input type="number" value={corpusEditFields.amount} onChange={e => setCorpusEditFields({...corpusEditFields, amount: e.target.value})}
-                                          className="w-20 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
-                                      </div>
-                                    </td>
-                                    <td className="px-3 py-2">
-                                      <div className="flex gap-1">
-                                        <button onClick={saveCorpusEdit} className="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">Save</button>
-                                        <button onClick={() => { setCorpusEditingId(null); setCorpusEditFields({}); setCorpusEditOther('') }} className="bg-zinc-700 text-white px-2 py-1 rounded-lg text-xs font-semibold">✕</button>
-                                      </div>
-                                    </td>
-                                  </>
-                                ) : (
-                                  <>
-                                    <td className="px-4 py-3 text-xs font-semibold text-white">{item.category}</td>
-                                    <td className="px-4 py-3 text-xs text-zinc-400">{formatDateDisplay(item.date)}</td>
-                                    <td className={`px-4 py-3 text-xs font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                                      {item.type === 'income' ? '+' : '-'}₹{Number(item.amount).toLocaleString()}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <button onClick={() => editCorpusTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors">
-                                        <Pencil size={14} />
-                                      </button>
-                                    </td>
-                                  </>
-                                )}
-                              </tr>
-                            </React.Fragment>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })()}
-
         {/* Mobile Bottom Nav */}
-        <div className={`fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-4 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${navVisible ? 'translate-y-0' : 'translate-y-28'}`}>
+        <div className={`fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${navVisible ? 'translate-y-0' : 'translate-y-28'}`}>
           <div className="flex items-center justify-between">
             {[
               { page: 'home', icon: <Home size={20} />, label: 'Home' },
-              { page: 'corpus', icon: <Landmark size={20} />, label: 'Corpus' },
               { page: 'electricity', icon: <Zap size={20} />, label: 'Electricity' },
               { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' },
             ].map(({ page, icon, label }) => (
