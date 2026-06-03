@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw, Landmark, Search, ChevronDown
+  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw, Landmark
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
@@ -15,23 +15,6 @@ const supabase = createClient(
 )
 
 const BUDGET_LIMIT = 85000
-
-const PAGE_TITLES = {
-  home: 'Balance Sheet',
-  corpus: 'Corpus Fund',
-  reports: 'Reports',
-  electricity: 'Electricity',
-}
-
-const NAV_ITEMS = [
-  { page: 'home', label: 'Dashboard', icon: Home },
-  { page: 'corpus', label: 'Corpus Fund', icon: Landmark },
-  { page: 'electricity', label: 'Electricity', icon: Zap },
-  { page: 'reports', label: 'Reports', icon: BarChart3 },
-]
-
-const panel = 'bg-[#151922] border border-[#1e2433] rounded-xl'
-const inputCls = 'w-full bg-[#0f1319] border border-[#1e2433] rounded-lg px-4 py-2.5 outline-none text-white text-sm placeholder:text-zinc-500 focus:border-violet-500/40'
 
 function formatDateDisplay(isoDate) {
   if (!isoDate) return ''
@@ -375,15 +358,13 @@ export default function FinanceApp() {
   const monthlyData = transactions.map(i => ({ name: i.title, amount: Number(i.amount), type: i.type }))
   const COLORS = ['#22c55e', '#ef4444']
 
-  const formatAmount = (n) => `₹${Number(n).toLocaleString('en-IN')}`
-
   return (
-    <div className="min-h-screen flex bg-[#0c0e14] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-zinc-900 text-white p-4 md:p-10">
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border transition-all duration-300 ${
-          toast.type === 'success' ? 'bg-green-950/90 border-green-700 text-green-300' : 'bg-red-950/90 border-red-700 text-red-300'
+        <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border transition-all duration-300 ${
+          toast.type === 'success' ? 'bg-green-950 border-green-700 text-green-300' : 'bg-red-950 border-red-700 text-red-300'
         }`}>
           {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
           <span className="text-sm font-medium">{toast.message}</span>
@@ -392,23 +373,28 @@ export default function FinanceApp() {
 
       {/* Budget Alert Banner */}
       {showBudgetAlert && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-lg px-4 md:ml-64">
-          <div className="bg-red-950 border border-red-500 rounded-xl p-5 shadow-[0_0_40px_rgba(239,68,68,0.3)]">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-lg px-4">
+          <div className="bg-red-950 border border-red-500 rounded-2xl p-5 shadow-[0_0_40px_rgba(239,68,68,0.3)]">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <div className="bg-red-500 rounded-lg p-2 mt-0.5">
+                <div className="bg-red-500 rounded-xl p-2 mt-0.5">
                   <Bell size={18} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-red-300 font-bold text-base">Monthly Budget Exceeded</h3>
+                  <h3 className="text-red-300 font-bold text-base">⚠️ Monthly Budget Exceeded!</h3>
                   <p className="text-red-400 text-sm mt-1">
-                    You've spent <span className="text-white font-bold">{formatAmount(currentMonthExpense)}</span> this month,
-                    which is <span className="text-white font-bold">{formatAmount(Math.abs(budgetRemaining))}</span> over your {formatAmount(BUDGET_LIMIT)} budget.
+                    You've spent <span className="text-white font-bold">₹ {currentMonthExpense.toLocaleString()}</span> this month,
+                    which is <span className="text-white font-bold">₹ {Math.abs(budgetRemaining).toLocaleString()}</span> over your ₹85,000 budget.
                   </p>
                   <div className="mt-3">
+                    <div className="flex justify-between text-xs text-red-400 mb-1">
+                      <span>₹ 0</span>
+                      <span>Budget: ₹ {BUDGET_LIMIT.toLocaleString()}</span>
+                    </div>
                     <div className="w-full bg-red-900 rounded-full h-2">
                       <div className="bg-red-500 h-2 rounded-full transition-all duration-500" style={{ width: `${budgetUsedPercent}%` }} />
                     </div>
+                    <p className="text-xs text-red-400 mt-1">{budgetUsedPercent.toFixed(0)}% of budget used</p>
                   </div>
                 </div>
               </div>
@@ -420,44 +406,34 @@ export default function FinanceApp() {
         </div>
       )}
 
-      {/* Sidebar — desktop */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col bg-[#080a0f] border-r border-[#1e2433] px-4 py-6">
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold text-white">GM</div>
-          <span className="font-semibold text-white">Green Meadows</span>
-        </div>
-        <nav className="flex flex-col gap-1">
-          {NAV_ITEMS.map(({ page, label, icon: Icon }) => (
-            <button
-              key={page}
-              onClick={() => setActivePage(page)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                activePage === page
-                  ? 'bg-violet-600/25 text-violet-300'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Icon size={18} />
-              {label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+      <div className="max-w-7xl mx-auto pb-28 md:pb-10">
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 p-4 md:p-8 overflow-auto pb-24 md:pb-8">
-          <p className="text-[11px] font-semibold tracking-widest text-zinc-500 uppercase mb-1">Green Meadows : Block A</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{PAGE_TITLES[activePage]}</h1>
+        {/* Header */}
+        <div className="md:sticky top-0 z-50 backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[32px] px-6 py-5 mb-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">Finance Tracker</h1>
+              <p className="text-zinc-400 mt-2">Green Meadows : Block - A</p>
+            </div>
+            <div className="hidden md:flex items-center justify-center lg:justify-end gap-3 flex-wrap">
+              {['home', 'corpus', 'reports', 'electricity'].map(page => (
+                <button key={page} onClick={() => setActivePage(page)}
+                  className={`px-6 py-3 rounded-2xl transition-all duration-300 font-semibold capitalize ${activePage === page ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
+                  {page}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Monthly Budget Bar — home page only */}
         {activePage === 'home' && currentMonthExpense > 0 && (
-          <div className={`${panel} p-5 mb-6 ${
+          <div className={`rounded-[24px] p-5 mb-5 border ${
             currentMonthExpense >= BUDGET_LIMIT
-              ? 'border-red-800/60'
+              ? 'bg-red-950/50 border-red-800'
               : currentMonthExpense >= BUDGET_LIMIT * 0.8
-              ? 'border-yellow-800/60'
-              : ''
+              ? 'bg-yellow-950/50 border-yellow-800'
+              : 'bg-white/5 border-white/10'
           }`}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -509,12 +485,12 @@ export default function FinanceApp() {
 
         {/* Corpus Fund Bar — corpus page only */}
         {activePage === 'corpus' && (
-          <div className={`${panel} p-5 mb-6 ${
+          <div className={`rounded-[24px] p-5 mb-5 border ${
             corpusExpense >= corpusIncome && corpusIncome > 0
-              ? 'border-red-800/60'
+              ? 'bg-red-950/50 border-red-800'
               : corpusUsedPercent >= 80
-              ? 'border-yellow-800/60'
-              : ''
+              ? 'bg-yellow-950/50 border-yellow-800'
+              : 'bg-white/5 border-white/10'
           }`}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -559,22 +535,18 @@ export default function FinanceApp() {
 
         {/* Summary Cards — home & corpus pages */}
         {isHomeLikePage && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-5">
             {[
-              { label: activePage === 'corpus' ? 'Received' : 'Income', value: formatAmount(pageIncome), icon: TrendingUp, badge: 'bg-green-500/20 text-green-400' },
-              { label: activePage === 'corpus' ? 'Used' : 'Expense', value: formatAmount(pageExpense), icon: TrendingDown, badge: 'bg-red-500/20 text-red-400' },
-              { label: 'Balance', value: formatAmount(pageBalance), icon: Wallet, badge: 'bg-blue-500/20 text-blue-400' },
-            ].map(({ label, value, icon: Icon, badge }) => (
-              <div key={label} className={`${panel} p-5 relative`}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-zinc-400 mb-2">{label}</p>
-                    <p className="text-2xl md:text-3xl font-bold text-white">{value}</p>
-                  </div>
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${badge}`}>
-                    <Icon size={16} />
-                  </div>
+              { label: 'Balance', value: `₹ ${pageBalance.toLocaleString()}`, icon: <Wallet size={16} />, color: '' },
+              { label: activePage === 'corpus' ? 'Received' : 'Income', value: `₹ ${pageIncome.toLocaleString()}`, icon: <TrendingUp size={16} className="text-green-400" />, color: 'text-green-400' },
+              { label: activePage === 'corpus' ? 'Used' : 'Expenses', value: `₹ ${pageExpense.toLocaleString()}`, icon: <TrendingDown size={16} className="text-red-400" />, color: 'text-red-400' },
+            ].map(({ label, value, icon, color }) => (
+              <div key={label} className="bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-[28px] p-3 md:p-6 border border-white/10 shadow-2xl">
+                <div className="flex items-center justify-between mb-1 md:mb-3">
+                  <h2 className="text-[11px] md:text-lg font-medium leading-tight">{label}</h2>
+                  <span className="hidden md:block">{icon}</span>
                 </div>
+                <p className={`text-lg text-left md:text-4xl font-black tracking-tight leading-snug ${color}`}>{value}</p>
               </div>
             ))}
           </div>
@@ -582,44 +554,45 @@ export default function FinanceApp() {
 
         {/* Home & Corpus Pages */}
         {isHomeLikePage && (
-          <div className="flex flex-col gap-6">
-            <div className={`${panel} p-5`}>
-              <div className="flex items-center gap-2 mb-4">
-                <Plus size={18} className="text-violet-400" />
-                <h3 className="text-base font-semibold">Add Transaction</h3>
-              </div>
-              <div className="flex bg-[#0f1319] rounded-lg p-1 mb-4 max-w-xs">
+          <div className="flex flex-col gap-8">
+            <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 backdrop-blur-2xl rounded-[32px] p-3 border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+              <div className="flex items-center gap-2 mb-6"><Plus /><h3 className="text-2x font-semibold">Add Transaction</h3></div>
+              <div className="flex bg-zinc-800 rounded-2xl p-1 mb-4">
                 {['expense', 'income'].map(t => (
                   <button key={t} onClick={() => handleTypeChange(t)}
-                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-all capitalize ${type === t ? (t === 'expense' ? 'bg-red-600 text-white' : 'bg-green-600 text-white') : 'text-zinc-500'}`}>
+                    className={`flex-1 py-3 rounded-2xl font-medium transition-all capitalize ${type === t ? (t === 'expense' ? 'bg-red-500 text-white' : 'bg-green-500 text-white') : 'text-zinc-400'}`}>
                     {t}
                   </button>
                 ))}
               </div>
               <div className="flex flex-col md:flex-row md:items-end gap-3">
                 {type === 'income' && (
-                  <div className="md:flex-1">
-                    <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className={inputCls}>
+                  <div className="flex flex-col gap-1 md:flex-1">
+                    <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
                       <option value="">Select Flat</option>
-                      {flatNumbers.map(f => <option key={f} value={f}>{f}</option>)}
+                      {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
                     </select>
                   </div>
                 )}
-                <div className="md:flex-1">
-                  <input value={date} onChange={e => setDate(e.target.value)} type="date" className={inputCls} />
+                <div className="flex flex-col gap-1 md:flex-1">
+                  <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white" />
                 </div>
-                <div className="md:flex-[1.2]">
-                  <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className={inputCls}>
-                    {formCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                <div className="flex flex-col gap-1 md:flex-[1.4]">
+                  <select value={category} onChange={e => { setCategory(e.target.value); setOtherCategory('') }} className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white">
+                    {formCategories.map(c => (
+                      <option key={c} className="bg-zinc-800">{c}</option>
+                    ))}
                   </select>
                 </div>
-                <div className="md:flex-1">
-                  <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="Amount" className={inputCls} />
+                <div className="flex flex-col gap-1 md:flex-1">
+                  <input value={amount} onChange={e => setAmount(e.target.value)} type="number" min="0" placeholder="0" className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500" />
                 </div>
-                <button onClick={addTransaction} disabled={saving}
-                  className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 transition-colors whitespace-nowrap">
-                  {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : '+ Add'}
-                </button>
+                <div className="flex flex-col gap-1 md:flex-none">
+                  <button onClick={addTransaction} disabled={saving}
+                    className="w-full md:w-auto bg-gradient-to-r from-white to-zinc-300 text-black px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-opacity whitespace-nowrap">
+                    {saving ? <><Loader2 size={18} className="animate-spin" /> Saving...</> : '+ Add'}
+                  </button>
+                </div>
               </div>
               {category === 'Others' && (
                 <div className="mt-3">
@@ -628,52 +601,50 @@ export default function FinanceApp() {
                     onChange={e => setOtherCategory(e.target.value.slice(0, 30))}
                     placeholder="Please specify category..."
                     maxLength={30}
-                    className={`${inputCls} border-amber-500/40`}
+                    className="w-full bg-zinc-800/70 border border-yellow-500/50 rounded-2xl px-4 py-3 outline-none text-white placeholder:text-zinc-500"
                   />
                   <p className="text-xs text-zinc-500 mt-1 text-right">{otherCategory.length}/30</p>
                 </div>
               )}
             </div>
 
-            <div className={`${panel} overflow-hidden`}>
-              <div className="p-5 border-b border-[#1e2433] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Transactions</h2>
-                  <p className="text-sm text-zinc-500 mt-0.5">Monthly overview of all transactions</p>
+            <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-3 border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2x font-semibold">Recent Transactions</h2>
+                <button onClick={refreshTransactions} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm hover:bg-white/20 transition-all flex items-center gap-2">
+                  <Loader2 size={12} className={pageLoading ? 'animate-spin' : ''} />
+                </button>
+              </div>
+              {/* Search Bar + Month Filter */}
+              <div className="flex gap-2 mb-4">
+                <div className="relative" style={{flex: '2'}}>
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search by category, flat no. or amount..."
+                    className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl pl-10 pr-10 py-3 outline-none text-white placeholder:text-zinc-500 text-sm"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors">
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                  <div className="relative flex-1 sm:min-w-[220px]">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Search transactions..."
-                      className={`${inputCls} pl-9 pr-9`}
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={e => setSelectedMonth(e.target.value)}
-                      className={`${inputCls} pr-9 appearance-none min-w-[140px]`}
-                    >
-                      <option value="">All Months</option>
-                      {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-                        <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-                  </div>
-                  <button onClick={refreshTransactions} className="p-2.5 rounded-lg border border-[#1e2433] bg-[#0f1319] hover:bg-[#1a2030] transition-colors" title="Refresh">
-                    <Loader2 size={16} className={`text-zinc-400 ${pageLoading ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
+                <select
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  className="bg-zinc-800/70 border border-zinc-700 rounded-2xl px-3 py-3 outline-none text-white text-sm"
+                  style={{flex: '1'}}
+                >
+                  <option value="">All Months</option>
+                  {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                    <option key={m} value={String(i + 1).padStart(2, '0')} className="bg-zinc-800">{m}</option>
+                  ))}
+                </select>
               </div>
               {pageLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -705,79 +676,205 @@ export default function FinanceApp() {
                 const noResultMsg = selectedMonth && !q
                   ? `No transactions in ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(selectedMonth)-1]}`
                   : `No results for "${searchQuery}"`
-                if (filtered.length === 0) {
-                  return (
-                    <div className="text-center py-16 text-zinc-500">
-                      <Search size={36} className="mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">{noResultMsg}</p>
-                    </div>
-                  )
-                }
-                return (
-                  <div className="overflow-x-auto max-h-[560px] overflow-y-auto">
-                    <table className="w-full text-left min-w-[640px]">
-                      <thead className="sticky top-0 bg-[#151922] z-10">
-                        <tr className="border-b border-[#1e2433]">
-                          {['DATE', 'FLAT', 'CATEGORY', 'STATUS', 'AMOUNT', ''].map(h => (
-                            <th key={h} className="px-5 py-3 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{h}</th>
-                          ))}
+                return filtered.length === 0 ? (
+                  <div className="text-center py-16 text-zinc-500">
+                    <svg className="mx-auto mb-3 opacity-30" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <p className="text-sm">{noResultMsg}</p>
+                  </div>
+                ) : (
+                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+
+                  {/* Desktop view */}
+                  <div className="hidden md:block space-y-3">
+                    {filtered.map(item => (
+                      <div key={item.id} className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-3xl p-5 border border-white/5 hover:border-white/10 transition-all">
+                        {editingId === item.id ? (
+                          <div className="flex flex-col gap-3">
+                            <div className="grid grid-cols-4 gap-3">
+                              {/* Date */}
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Date</p>
+                                <input
+                                  type="date"
+                                  value={editFields.date}
+                                  onChange={e => setEditFields({...editFields, date: e.target.value})}
+                                  className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
+                                />
+                              </div>
+                              {/* Category */}
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Category</p>
+                                <select
+                                  value={editFields.category}
+                                  onChange={e => { setEditFields({...editFields, category: e.target.value}); setEditOtherCategory('') }}
+                                  className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
+                                >
+                                  {getCategories(activePage, editFields.type).map(c => <option key={c}>{c}</option>)}
+                                </select>
+                              </div>
+                              {/* Amount */}
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Amount (₹)</p>
+                                <input
+                                  type="number"
+                                  value={editFields.amount}
+                                  onChange={e => setEditFields({...editFields, amount: e.target.value})}
+                                  className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
+                                />
+                              </div>
+                              {/* Flat No — only show if income */}
+                              {editFields.type === 'income' ? (
+                                <div>
+                                  <p className="text-xs text-zinc-500 mb-1">Flat No.</p>
+                                  <select
+                                    value={editFields.flat_no}
+                                    onChange={e => setEditFields({...editFields, flat_no: e.target.value})}
+                                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm outline-none text-white"
+                                  >
+                                    <option value="">Select Flat</option>
+                                    {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
+                                  </select>
+                                </div>
+                              ) : (
+                                <div className="flex items-end gap-2">
+                                  <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
+                                    <Check size={14} /> Save
+                                  </button>
+                                  <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
+                                    <X size={14} /> Cancel
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Others custom field */}
+                            {editFields.category === 'Others' && (
+                              <div>
+                                <input
+                                  value={editOtherCategory}
+                                  onChange={e => setEditOtherCategory(e.target.value.slice(0, 30))}
+                                  placeholder="Please specify category..."
+                                  maxLength={30}
+                                  className="w-full bg-zinc-800 border border-yellow-500/50 rounded-xl px-3 py-2 text-sm outline-none text-white placeholder:text-zinc-500"
+                                />
+                                <p className="text-xs text-zinc-500 mt-1 text-right">{editOtherCategory.length}/30</p>
+                              </div>
+                            )}
+
+                            {/* Save/Cancel row for income type */}
+                            {editFields.type === 'income' && (
+                              <div className="flex gap-2">
+                                <button onClick={saveEdit} className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
+                                  <Check size={14} /> Save
+                                </button>
+                                <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="flex-1 bg-zinc-700 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
+                                  <X size={14} /> Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="text-left">
+                              <h3 className="font-semibold text-lg">{item.title}</h3>
+                              <p className="text-sm text-zinc-400 text-left">
+                                {formatDateDisplay(item.date)} • {item.category}{item.flat_no ? ` • ${item.flat_no}` : ''}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <p className={`text-lg font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
+                              </p>
+                              <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors p-1">
+                                <Pencil size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Mobile scrollable table view */}
+                  <div className="md:hidden overflow-x-auto rounded-2xl border border-white/10">
+                    <table className="w-full text-left min-w-[540px]">
+                      <thead>
+                        <tr className="bg-zinc-900 border-b border-white/10">
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Category</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Flat No.</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Date</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Amount</th>
+                          <th className="px-4 py-3 text-xs text-zinc-400 font-semibold">Edit</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filtered.map((item, idx) => (
                           <React.Fragment key={item.id}>
-                            {editingId === item.id ? (
-                              <tr className="bg-[#0f1319] border-b border-[#1e2433]">
-                                <td colSpan={6} className="px-5 py-4">
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                    <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})} className={inputCls} />
-                                    <select value={editFields.category} onChange={e => { setEditFields({...editFields, category: e.target.value}); setEditOtherCategory('') }} className={inputCls}>
-                                      {getCategories(activePage, editFields.type).map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                    <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})} className={inputCls} />
-                                    {editFields.type === 'income' && (
-                                      <select value={editFields.flat_no} onChange={e => setEditFields({...editFields, flat_no: e.target.value})} className={inputCls}>
-                                        <option value="">Select Flat</option>
-                                        {flatNumbers.map(f => <option key={f} value={f}>{f}</option>)}
+                            <tr className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-800/40'}`}>
+                              {editingId === item.id ? (
+                                <>
+                                  <td className="px-3 py-2" colSpan={4}>
+                                    <div className="flex gap-2 flex-wrap">
+                                      <input type="date" value={editFields.date} onChange={e => setEditFields({...editFields, date: e.target.value})}
+                                        className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]" />
+                                      <select value={editFields.category} onChange={e => { setEditFields({...editFields, category: e.target.value}); setEditOtherCategory('') }}
+                                        className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]">
+                                        {getCategories(activePage, editFields.type).map(c => <option key={c}>{c}</option>)}
                                       </select>
+                                      <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})}
+                                        className="w-20 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white" />
+                                      {editFields.type === 'income' && (
+                                        <select value={editFields.flat_no} onChange={e => setEditFields({...editFields, flat_no: e.target.value})}
+                                          className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-2 py-1.5 text-xs outline-none text-white min-w-[100px]">
+                                          <option value="">Select Flat</option>
+                                          {flatNumbers.map(f => <option key={f} className="bg-zinc-800">{f}</option>)}
+                                        </select>
+                                      )}
+                                    </div>
+                                    {editFields.category === 'Others' && (
+                                      <div className="mt-2">
+                                        <input
+                                          value={editOtherCategory}
+                                          onChange={e => setEditOtherCategory(e.target.value.slice(0, 30))}
+                                          placeholder="Specify category..."
+                                          maxLength={30}
+                                          className="w-full bg-zinc-800 border border-yellow-500/50 rounded-lg px-2 py-1.5 text-xs outline-none text-white placeholder:text-zinc-500"
+                                        />
+                                        <p className="text-xs text-zinc-500 mt-0.5 text-right">{editOtherCategory.length}/30</p>
+                                      </div>
                                     )}
-                                  </div>
-                                  {editFields.category === 'Others' && (
-                                    <input value={editOtherCategory} onChange={e => setEditOtherCategory(e.target.value.slice(0, 30))} placeholder="Specify category..." maxLength={30} className={`${inputCls} mt-3 border-amber-500/40`} />
-                                  )}
-                                  <div className="flex gap-2 mt-3">
-                                    <button onClick={saveEdit} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Check size={14} /> Save</button>
-                                    <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><X size={14} /> Cancel</button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ) : (
-                              <tr className={`border-b border-[#1e2433]/80 hover:bg-[#1a2030]/50 transition-colors ${idx % 2 === 1 ? 'bg-[#0f1319]/40' : ''}`}>
-                                <td className="px-5 py-4 text-sm text-zinc-300">{formatDateDisplay(item.date)}</td>
-                                <td className="px-5 py-4 text-sm text-zinc-400">{item.flat_no || '—'}</td>
-                                <td className="px-5 py-4 text-sm text-white font-medium">{item.category}</td>
-                                <td className="px-5 py-4">
-                                  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
-                                    item.type === 'income' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'
-                                  }`}>
-                                    {item.type === 'income' ? 'Income' : 'Expense'}
-                                  </span>
-                                </td>
-                                <td className={`px-5 py-4 text-sm font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                                  {formatAmount(item.amount)}
-                                </td>
-                                <td className="px-5 py-4">
-                                  <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-violet-400 transition-colors p-1" title="Edit">
-                                    <Pencil size={16} />
-                                  </button>
-                                </td>
-                              </tr>
-                            )}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <div className="flex gap-1">
+                                      <button onClick={saveEdit} className="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">Save</button>
+                                      <button onClick={() => { setEditingId(null); setEditFields({}); setEditOtherCategory('') }} className="bg-zinc-700 text-white px-2 py-1 rounded-lg text-xs font-semibold">✕</button>
+                                    </div>
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="px-4 py-3 text-xs font-semibold text-white">{item.category}</td>
+                                  <td className="px-4 py-3 text-xs text-zinc-400">{item.flat_no || '—'}</td>
+                                  <td className="px-4 py-3 text-xs text-zinc-400">{formatDateDisplay(item.date)}</td>
+                                  <td className={`px-4 py-3 text-xs font-bold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                    {item.type === 'income' ? '+' : '-'}₹{Number(item.amount).toLocaleString()}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <button onClick={() => editTransaction(item)} className="text-zinc-500 hover:text-blue-400 transition-colors">
+                                      <Pencil size={14} />
+                                    </button>
+                                  </td>
+                                </>
+                              )}
+                            </tr>
                           </React.Fragment>
                         ))}
                       </tbody>
                     </table>
                   </div>
+                </div>
                 )
               })()}
             </div>
@@ -786,9 +883,9 @@ export default function FinanceApp() {
 
         {/* Reports Page */}
         {activePage === 'reports' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className={`${panel} p-6`}>
+              <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
                   <button onClick={() => setReportView(reportView === 'table' ? 'charts' : 'table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><PieChart size={20} /></button>
@@ -798,12 +895,12 @@ export default function FinanceApp() {
                     { label: 'Savings Ratio', value: `${incomePercentage.toFixed(0)}%`, icon: <TrendingUp className="text-green-400" />, color: 'text-green-400' },
                     { label: 'Expense Ratio', value: `${expensePercentage.toFixed(0)}%`, icon: <TrendingDown className="text-red-400" />, color: 'text-red-400' },
                   ].map(({ label, value, icon, color }) => (
-                    <div key={label} className="bg-[#0f1319] rounded-lg p-5 border border-[#1e2433]">
+                    <div key={label} className="bg-zinc-900 rounded-3xl p-5 border border-white/5">
                       <div className="flex items-center justify-between mb-3"><p className="text-zinc-400">{label}</p>{icon}</div>
                       <h3 className={`text-4xl font-black ${color}`}>{value}</h3>
                     </div>
                   ))}
-                  <div className="bg-[#0f1319] rounded-lg p-5 border border-[#1e2433]">
+                  <div className="bg-zinc-900 rounded-3xl p-5 border border-white/5">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-zinc-400">This Month's Expenses</p>
                       <Bell size={18} className={currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400' : 'text-zinc-500'} />
@@ -817,7 +914,7 @@ export default function FinanceApp() {
               </div>
 
               {reportView === 'charts' ? (
-                <div className={`${panel} p-6 h-[420px]`}>
+                <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl h-[420px]">
                   <div className="flex items-center justify-between mb-5">
                     <h2 className="text-2xl font-semibold">Financial Charts</h2>
                     <button onClick={() => setReportView('table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><X size={20} /></button>
@@ -832,9 +929,9 @@ export default function FinanceApp() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className={`${panel} p-6`}>
+                <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg font-semibold">Transaction Report</h2>
+                    <h2 className="text-2x font-semibold">Transaction Report</h2>
                     <button onClick={() => setReportView('charts')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><BarChart3 size={20} /></button>
                   </div>
                   <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
@@ -862,8 +959,8 @@ export default function FinanceApp() {
               )}
             </div>
 
-            <div className={`${panel} p-6 h-[400px]`}>
-              <h2 className="text-lg font-semibold mb-5">Income & Expense Trends</h2>
+            <div className="bg-white/5 backdrop-blur-xl rounded-[32px] p-6 border border-white/10 shadow-2xl h-[400px]">
+              <h2 className="text-2xl font-semibold mb-5">Income & Expense Trends</h2>
               <ResponsiveContainer width="100%" height="85%">
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -924,7 +1021,7 @@ export default function FinanceApp() {
                   { label: 'Paid', value: paidCount, icon: <CheckCircle size={18} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
                   { label: 'Pending', value: pendingCount, icon: <Zap size={18} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
-                  <div key={label} className={`${panel} p-4 md:p-5`}>
+                  <div key={label} className="bg-white/5 backdrop-blur-xl rounded-[20px] md:rounded-[28px] p-3 md:p-5 border border-white/10 shadow-2xl">
                     <div className="flex items-center justify-between mb-2 md:mb-3">
                       <p className="text-zinc-400 text-[11px] md:text-sm font-medium leading-tight">{label}</p>
                       <div className={`p-1.5 md:p-2 rounded-xl border flex-shrink-0 ${iconBg}`}>{icon}</div>
@@ -953,19 +1050,19 @@ export default function FinanceApp() {
                     value={elecSearch}
                     onChange={e => setElecSearch(e.target.value)}
                     placeholder="Search flat no..."
-                    className={`${inputCls} pl-10`}
+                    className="w-full bg-zinc-800/70 border border-zinc-700 rounded-2xl pl-10 pr-4 py-3 outline-none text-white placeholder:text-zinc-500 text-sm"
                   />
                 </div>
                 <select
                   value={elecMonthFilter}
                   onChange={e => setElecMonthFilter(e.target.value)}
-                  className={`${inputCls} min-w-[160px]`}
+                  className="bg-zinc-800/70 border border-zinc-700 rounded-2xl px-4 py-3 outline-none text-white text-sm"
                 >
                   {monthOptions.map(o => (
                     <option key={o.val} value={o.val} className="bg-zinc-800">{o.label}</option>
                   ))}
                 </select>
-                <div className="flex bg-[#0f1319] rounded-lg p-1 gap-1 border border-[#1e2433]">
+                <div className="flex bg-zinc-800 rounded-2xl p-1 gap-1">
                   {['all', 'paid', 'pending'].map(s => (
                     <button
                       key={s}
@@ -992,7 +1089,7 @@ export default function FinanceApp() {
               </div>
 
               {/* Table */}
-              <div className={`${panel} overflow-hidden`}>
+              <div className="bg-white/5 backdrop-blur-xl rounded-[28px] border border-white/10 shadow-2xl overflow-hidden">
                 {elecLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-3">
                     <Loader2 size={32} className="animate-spin text-zinc-400" />
@@ -1046,25 +1143,20 @@ export default function FinanceApp() {
           )
         })()}
 
-        </main>
-
         {/* Mobile Bottom Nav */}
-        <nav className={`fixed bottom-0 left-0 right-0 md:hidden bg-[#080a0f] border-t border-[#1e2433] px-2 py-2 z-50 transition-transform duration-300 ${navVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-          <div className="flex items-center justify-around">
-            {NAV_ITEMS.map(({ page, label, icon: Icon }) => (
-              <button
-                key={page}
-                onClick={() => setActivePage(page)}
-                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-[10px] font-medium transition-colors ${
-                  activePage === page ? 'text-violet-400' : 'text-zinc-500'
-                }`}
-              >
-                <Icon size={20} />
-                <span className="truncate max-w-[72px]">{page === 'home' ? 'Home' : label.split(' ')[0]}</span>
-              </button>
+        <div className={`fixed bottom-4 left-4 right-4 md:hidden bg-black/70 backdrop-blur-2xl border border-white/10 rounded-3xl px-6 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${navVisible ? 'translate-y-0' : 'translate-y-28'}`}>
+          <div className="flex items-center justify-between">
+            {[
+              { page: 'home', icon: <Home size={20} />, label: 'Home' },
+              { page: 'corpus', icon: <Landmark size={20} />, label: 'Corpus' },
+              { page: 'electricity', icon: <Zap size={20} />, label: 'Electricity' },
+              { page: 'reports', icon: <BarChart3 size={20} />, label: 'Reports' },
+            ].map(({ page, icon, label }) => (
+              <button key={page} onClick={() => setActivePage(page)} className={`flex flex-col items-center gap-1 text-xs ${activePage === page ? 'text-white' : 'text-zinc-500'}`}>{icon}{label}</button>
             ))}
           </div>
-        </nav>
+        </div>
+
       </div>
     </div>
   )
