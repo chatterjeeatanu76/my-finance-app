@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
@@ -46,7 +46,7 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Corpus Fund', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
+const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
 const CORPUS_INCOME_CATEGORIES = ['Corpus Fund']
 const CORPUS_EXPENSE_CATEGORIES = ['New Pump Instalation', 'Water Treatment', 'Others']
 
@@ -61,6 +61,74 @@ function isCustomCategory(cat, page = 'home', transactionType = 'expense') {
   if (!cat) return false
   const standard = getCategories(page, transactionType)
   return !standard.includes(cat)
+}
+
+function SearchableFlatSelect({ value, onChange, flats }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false)
+        setQuery('')
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return flats
+    return flats.filter(f => f.toLowerCase().includes(q))
+  }, [flats, query])
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 z-10 pointer-events-none" />
+      <input
+        type="text"
+        value={open ? query : (value || '')}
+        placeholder="Search flat..."
+        onChange={e => {
+          setQuery(e.target.value)
+          setOpen(true)
+          if (!e.target.value) onChange('')
+        }}
+        onFocus={() => {
+          setOpen(true)
+          setQuery(value || '')
+        }}
+        className={`${inputCls} pl-9`}
+      />
+      {open && (
+        <ul className="absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto rounded-lg border border-[#1e2433] bg-[#151922] shadow-xl z-50 py-1">
+          {filtered.length === 0 ? (
+            <li className="px-4 py-2.5 text-sm text-zinc-500">No flats found</li>
+          ) : (
+            filtered.map(f => (
+              <li
+                key={f}
+                onMouseDown={e => e.preventDefault()}
+                onClick={() => {
+                  onChange(f)
+                  setOpen(false)
+                  setQuery('')
+                }}
+                className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-violet-600/20 transition-colors ${
+                  value === f ? 'text-violet-300 bg-violet-600/10' : 'text-zinc-200'
+                }`}
+              >
+                {f}
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  )
 }
 
 export default function FinanceApp() {
@@ -599,10 +667,7 @@ export default function FinanceApp() {
               <div className="flex flex-col md:flex-row md:items-end gap-3">
                 {type === 'income' && (
                   <div className="md:flex-1">
-                    <select value={flatNo} onChange={e => setFlatNo(e.target.value)} className={inputCls}>
-                      <option value="">Select Flat</option>
-                      {flatNumbers.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
+                    <SearchableFlatSelect value={flatNo} onChange={setFlatNo} flats={flatNumbers} />
                   </div>
                 )}
                 <div className="md:flex-1">
@@ -736,10 +801,11 @@ export default function FinanceApp() {
                                     </select>
                                     <input type="number" value={editFields.amount} onChange={e => setEditFields({...editFields, amount: e.target.value})} className={inputCls} />
                                     {editFields.type === 'income' && (
-                                      <select value={editFields.flat_no} onChange={e => setEditFields({...editFields, flat_no: e.target.value})} className={inputCls}>
-                                        <option value="">Select Flat</option>
-                                        {flatNumbers.map(f => <option key={f} value={f}>{f}</option>)}
-                                      </select>
+                                      <SearchableFlatSelect
+                                        value={editFields.flat_no}
+                                        onChange={v => setEditFields({ ...editFields, flat_no: v })}
+                                        flats={flatNumbers}
+                                      />
                                     )}
                                   </div>
                                   {editFields.category === 'Others' && (
