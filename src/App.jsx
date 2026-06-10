@@ -629,9 +629,9 @@ export default function FinanceApp() {
         {isHomeLikePage && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {[
-              { label: activePage === 'corpus' ? 'Received' : 'Income', value: formatAmount(pageIncome), icon: TrendingUp, badge: 'bg-green-500/20 text-green-400' },
-              { label: activePage === 'corpus' ? 'Used' : 'Expense', value: formatAmount(pageExpense), icon: TrendingDown, badge: 'bg-red-500/20 text-red-400' },
-              { label: 'Balance', value: formatAmount(pageBalance), icon: Wallet, badge: 'bg-blue-500/20 text-blue-400' },
+              { label: activePage === 'corpus' ? 'Received' : 'Income', value: formatAmount(pageIncome), icon: TrendingUp, badge: 'bg-green-900/60 border-green-700 text-green-400' },
+              { label: activePage === 'corpus' ? 'Used' : 'Expense', value: formatAmount(pageExpense), icon: TrendingDown, badge: 'bg-red-900/60 border-red-700 text-red-400' },
+              { label: 'Balance', value: formatAmount(pageBalance), icon: Wallet, badge: 'bg-blue-900/60 border-blue-700 text-blue-400' },
             ].map(({ label, value, icon: Icon, badge }) => (
               <div key={label} className={`${panel} p-5 relative`}>
                 <div className="flex items-start justify-between">
@@ -639,7 +639,7 @@ export default function FinanceApp() {
                     <p className="text-sm text-zinc-400 mb-2">{label}</p>
                     <p className="text-2xl md:text-3xl font-bold text-white">{value}</p>
                   </div>
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${badge}`}>
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${badge}`}>
                     <Icon size={16} />
                   </div>
                 </div>
@@ -984,18 +984,24 @@ export default function FinanceApp() {
           return (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-3 gap-2 md:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-4">
                 {[
                   { label: 'Total Flats', value: TOTAL_FLATS, icon: <Zap size={18} className="text-blue-400" />, iconBg: 'bg-blue-900/60 border-blue-700' },
                   { label: 'Paid', value: paidCount, icon: <CheckCircle size={18} className="text-green-400" />, iconBg: 'bg-green-900/60 border-green-700' },
                   { label: 'Pending', value: pendingCount, icon: <Zap size={18} className="text-red-400" />, iconBg: 'bg-red-900/60 border-red-700' },
                 ].map(({ label, value, icon, iconBg }) => (
-                  <div key={label} className={`${panel} p-4 md:p-5`}>
-                    <div className="flex items-center justify-between mb-2 md:mb-3">
-                      <p className="text-zinc-400 text-[11px] md:text-sm font-medium leading-tight">{label}</p>
-                      <div className={`p-1.5 md:p-2 rounded-xl border flex-shrink-0 ${iconBg}`}>{icon}</div>
+                  <div key={label} className={`${panel} p-5 relative`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                     <p className="text-zinc-400 text-sm md:text-sm font-medium leading-tight">{label}</p>
+                     <p className="text-2xl md:text-3xl font-black text-white">{value}</p>
+                  </div>
+                      
+                      <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${iconBg}`}>{icon}</div>
                     </div>
-                    <p className="text-2xl md:text-4xl font-black text-white">{value}</p>
+                   
+
+
                   </div>
                 ))}
               </div>
