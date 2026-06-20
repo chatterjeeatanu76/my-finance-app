@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
-  Tooltip, LineChart, Line, CartesianGrid, XAxis, YAxis,
+  Tooltip, LineChart, Line, CartesianGrid, XAxis,
 } from 'recharts'
 
 const supabase = createClient(
@@ -152,8 +152,6 @@ export default function FinanceApp() {
   const [editOtherCategory, setEditOtherCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
-  const [reportSearchQuery, setReportSearchQuery] = useState('')
-  const [reportSelectedMonth, setReportSelectedMonth] = useState('')
   const [navVisible, setNavVisible] = useState(true)
   const lastScrollY = React.useRef(0)
 
@@ -442,23 +440,7 @@ export default function FinanceApp() {
   const expensePercentage = totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0
   const incomePercentage = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0
   const chartData = [{ name: 'Income', value: totalIncome }, { name: 'Expense', value: totalExpense }]
-  const monthlyData = useMemo(() => {
-    const grouped = {}
-    transactions.forEach(t => {
-      if (!t.date) return
-      const key = t.date.slice(0, 7)
-      if (!grouped[key]) grouped[key] = { key, income: 0, expense: 0 }
-      if (t.type === 'income') grouped[key].income += Number(t.amount)
-      else grouped[key].expense += Number(t.amount)
-    })
-    return Object.values(grouped)
-      .sort((a, b) => a.key.localeCompare(b.key))
-      .map(g => {
-        const [y, m] = g.key.split('-')
-        const label = new Date(Number(y), Number(m) - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' })
-        return { name: label, income: g.income, expense: g.expense }
-      })
-  }, [transactions])
+  const monthlyData = transactions.map(i => ({ name: i.title, amount: Number(i.amount), type: i.type }))
   const COLORS = ['#22c55e', '#ef4444']
 
   const formatAmount = (n) => `₹${Number(n).toLocaleString('en-IN')}`
@@ -871,7 +853,7 @@ export default function FinanceApp() {
         {/* Reports Page */}
         {activePage === 'reports' && (
           <div className="space-y-6">
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={`${panel} p-6`}>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
@@ -917,115 +899,45 @@ export default function FinanceApp() {
                 </div>
               ) : (
                 <div className={`${panel} p-6`}>
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+                  <div className="flex items-center justify-between mb-5">
                     <h2 className="text-lg font-semibold">Transaction Report</h2>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                      <div className="relative flex-1 sm:min-w-[200px]">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        <input
-                          type="text"
-                          value={reportSearchQuery}
-                          onChange={e => setReportSearchQuery(e.target.value)}
-                          placeholder="Search..."
-                          className={`${inputCls} pl-9 pr-9`}
-                        />
-                        {reportSearchQuery && (
-                          <button onClick={() => setReportSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
-                            <X size={14} />
-                          </button>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="month"
-                          value={reportSelectedMonth}
-                          onChange={e => setReportSelectedMonth(e.target.value)}
-                          className={`${inputCls} min-w-[150px]`}
-                        />
-                      </div>
-                      {(reportSearchQuery || reportSelectedMonth) && (
-                        <button onClick={() => { setReportSearchQuery(''); setReportSelectedMonth('') }} className="text-xs text-zinc-500 hover:text-white whitespace-nowrap">
-                          Clear filters
-                        </button>
-                      )}
-                      <button onClick={() => setReportView('charts')} className="bg-white/10 border border-white/10 p-2.5 rounded-xl hover:bg-white/20 transition-all flex-shrink-0"><BarChart3 size={18} /></button>
-                    </div>
+                    <button onClick={() => setReportView('charts')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><BarChart3 size={20} /></button>
                   </div>
-                  {(() => {
-                    const rq = reportSearchQuery.trim().toLowerCase()
-                    const reportFiltered = transactions.filter(item => {
-                      const matchesSearch = !rq || (
-                        item.title?.toLowerCase().includes(rq) ||
-                        item.category?.toLowerCase().includes(rq) ||
-                        (item.flat_no && item.flat_no.toLowerCase().includes(rq)) ||
-                        String(item.amount).includes(rq)
-                      )
-                      const matchesMonth = !reportSelectedMonth || (item.date && item.date.slice(0, 7) === reportSelectedMonth)
-                      return matchesSearch && matchesMonth
-                    })
-                    if (reportFiltered.length === 0) {
-                      return (
-                        <div className="text-center py-16 text-zinc-500">
-                          <Search size={32} className="mx-auto mb-3 opacity-30" />
-                          <p className="text-sm">No transactions found.</p>
-                        </div>
-                      )
-                    }
-                    return (
-                      <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-                        <table className="w-full text-left min-w-[560px]">
-                          <thead className="sticky top-0 bg-[#151922]">
-                            <tr className="border-b border-white/10 text-zinc-400">
-                              {['Title', 'Flat No.', 'Date', 'Category', 'Amount'].map(h => <th key={h} className="pb-4 pr-4 pt-1 text-xs font-semibold uppercase tracking-wider">{h}</th>)}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {reportFiltered.map(item => (
-                              <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-4 text-xs pr-4">{item.title}</td>
-                                <td className="py-4 text-xs pr-4 text-zinc-400">{item.flat_no || '—'}</td>
-                                <td className="py-4 text-xs pr-4">{formatDateDisplay(item.date)}</td>
-                                <td className="py-4 text-xs pr-4">{item.category}</td>
-                                <td className={`py-4 text-xs font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
-                                  {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )
-                  })()}
+                  <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                    <table className="w-full text-left">
+                      <thead className="sticky top-0 bg-zinc-900">
+                        <tr className="border-b border-white/10 text-zinc-400">
+                          {['Title', 'Date', 'Category', 'Amount'].map(h => <th key={h} className="pb-4 pr-4">{h}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map(item => (
+                          <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td className="py-4 text-xs pr-4">{item.title}</td>
+                            <td className="py-4 text-xs pr-4">{formatDateDisplay(item.date)}</td>
+                            <td className="py-4 text-xs pr-4">{item.category}</td>
+                            <td className={`py-4 text-xs font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                              {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
 
             <div className={`${panel} p-6 h-[400px]`}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-semibold">Income & Expense Trends</h2>
-                <div className="flex items-center gap-4 text-xs text-zinc-400">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>Income</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>Expense</span>
-                </div>
-              </div>
-              {monthlyData.length === 0 ? (
-                <div className="flex items-center justify-center h-[85%] text-zinc-500 text-sm">No data to display yet.</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="85%">
-                  <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                    <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={{ stroke: '#27272a' }} />
-                    <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                    <Tooltip
-                      formatter={(value, name) => [`₹ ${Number(value).toLocaleString()}`, name === 'income' ? 'Income' : 'Expense']}
-                      contentStyle={{ background: '#151922', border: '1px solid #1e2433', borderRadius: 8, fontSize: 12 }}
-                      labelStyle={{ color: '#fff' }}
-                    />
-                    <Line type="monotone" dataKey="income" stroke="#4ade80" strokeWidth={2.5} dot={{ fill: '#4ade80', r: 3 }} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="expense" stroke="#f87171" strokeWidth={2.5} dot={{ fill: '#f87171', r: 3 }} activeDot={{ r: 5 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
+              <h2 className="text-lg font-semibold mb-5">Income & Expense Trends</h2>
+              <ResponsiveContainer width="100%" height="85%">
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="name" stroke="#a1a1aa" />
+                  <Tooltip formatter={(value) => `₹ ${Number(value).toLocaleString()}`} />
+                  <Line type="monotone" dataKey="amount" stroke="#ffffff" strokeWidth={3} dot={{ fill: '#ffffff', r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
