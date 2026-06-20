@@ -154,6 +154,7 @@ export default function FinanceApp() {
   const [selectedMonth, setSelectedMonth] = useState('')
   const [reportSearchQuery, setReportSearchQuery] = useState('')
   const [reportSelectedMonth, setReportSelectedMonth] = useState('')
+  const [mergeByFlat, setMergeByFlat] = useState(true)
   const [navVisible, setNavVisible] = useState(true)
   const lastScrollY = React.useRef(0)
 
@@ -948,12 +949,18 @@ export default function FinanceApp() {
                           Clear filters
                         </button>
                       )}
+                      <button
+                        onClick={() => setMergeByFlat(!mergeByFlat)}
+                        className={`text-xs px-3 py-2.5 rounded-xl border transition-all whitespace-nowrap ${mergeByFlat ? 'bg-violet-600/20 border-violet-500/40 text-violet-300' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'}`}
+                      >
+                        {mergeByFlat ? '✓ Merged by flat' : 'Merge by flat'}
+                      </button>
                       <button onClick={() => setReportView('charts')} className="bg-white/10 border border-white/10 p-2.5 rounded-xl hover:bg-white/20 transition-all flex-shrink-0"><BarChart3 size={18} /></button>
                     </div>
                   </div>
                   {(() => {
                     const rq = reportSearchQuery.trim().toLowerCase()
-                    const reportFiltered = transactions.filter(item => {
+                    let reportFiltered = transactions.filter(item => {
                       const matchesSearch = !rq || (
                         item.title?.toLowerCase().includes(rq) ||
                         item.category?.toLowerCase().includes(rq) ||
@@ -963,6 +970,34 @@ export default function FinanceApp() {
                       const matchesMonth = !reportSelectedMonth || (item.date && item.date.slice(0, 7) === reportSelectedMonth)
                       return matchesSearch && matchesMonth
                     })
+
+                    if (mergeByFlat) {
+                      const groups = new Map()
+                      const order = []
+                      reportFiltered.forEach(item => {
+                        if (!item.flat_no) {
+                          const soloKey = `solo-${item.id}`
+                          groups.set(soloKey, { ...item, categories: [item.category], ids: [item.id] })
+                          order.push(soloKey)
+                          return
+                        }
+                        const key = `${item.flat_no}-${item.date}-${item.type}`
+                        if (groups.has(key)) {
+                          const g = groups.get(key)
+                          g.amount = Number(g.amount) + Number(item.amount)
+                          g.categories.push(item.category)
+                          g.ids.push(item.id)
+                        } else {
+                          groups.set(key, { ...item, categories: [item.category], ids: [item.id] })
+                          order.push(key)
+                        }
+                      })
+                      reportFiltered = order.map(k => {
+                        const g = groups.get(k)
+                        return { ...g, title: g.categories.join(' + '), category: g.categories.join(' + ') }
+                      })
+                    }
+
                     if (reportFiltered.length === 0) {
                       return (
                         <div className="text-center py-16 text-zinc-500">
@@ -981,11 +1016,11 @@ export default function FinanceApp() {
                           </thead>
                           <tbody>
                             {reportFiltered.map(item => (
-                              <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-4 text-xs pr-4">{item.title}</td>
+                              <tr key={item.ids ? item.ids.join('-') : item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-4 text-xs pr-4 max-w-[220px]">{item.title}</td>
                                 <td className="py-4 text-xs pr-4 text-zinc-400">{item.flat_no || '—'}</td>
                                 <td className="py-4 text-xs pr-4">{formatDateDisplay(item.date)}</td>
-                                <td className="py-4 text-xs pr-4">{item.category}</td>
+                                <td className="py-4 text-xs pr-4 max-w-[220px]">{item.category}</td>
                                 <td className={`py-4 text-xs font-semibold ${item.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                                   {item.type === 'income' ? '+' : '-'}₹ {Number(item.amount).toLocaleString()}
                                 </td>
