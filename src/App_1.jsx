@@ -210,9 +210,6 @@ export default function FinanceApp() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
   const [elecStatusFilter, setElecStatusFilter] = useState('all')
-  const [elecEditingKey, setElecEditingKey] = useState(null)
-  const [elecEditFields, setElecEditFields] = useState({ amount: '', usn: '' })
-  const [elecSaving, setElecSaving] = useState(false)
 
   const showToast = (type, message) => {
     setToast({ type, message })
@@ -247,73 +244,6 @@ export default function FinanceApp() {
   useEffect(() => {
     if (activePage === 'electricity') fetchElecRecords()
   }, [activePage, elecMonthFilter])
-
-  const startElecEdit = (record) => {
-    setElecEditingKey(`rec-${record.id}`)
-    setElecEditFields({ amount: record.amount ?? '', usn: record.usn ?? '' })
-  }
-
-  const startElecAdd = (flatNo) => {
-    setElecEditingKey(`new-${flatNo}`)
-    setElecEditFields({ amount: '', usn: '' })
-  }
-
-  const cancelElecEdit = () => {
-    setElecEditingKey(null)
-    setElecEditFields({ amount: '', usn: '' })
-  }
-
-  const saveElecEdit = async (record, flatNo) => {
-    if (!elecEditFields.amount) {
-      showToast('error', 'Please enter the amount')
-      return
-    }
-    setElecSaving(true)
-    try {
-      if (record) {
-        // Editing an existing paid record
-        const { error } = await supabase
-          .from('electricity_payments')
-          .update({ amount: Number(elecEditFields.amount), usn: elecEditFields.usn || null })
-          .eq('id', record.id)
-        if (error) throw error
-        setElecRecords(prev => prev.map(r => r.id === record.id ? { ...r, amount: Number(elecEditFields.amount), usn: elecEditFields.usn || null } : r))
-        showToast('success', 'Electricity record updated!')
-      } else {
-        // Adding a new paid record for a pending flat
-        const { data, error } = await supabase
-          .from('electricity_payments')
-          .insert([{ flat_no: flatNo, amount: Number(elecEditFields.amount), usn: elecEditFields.usn || null, paid: true, month: elecMonthFilter }])
-          .select()
-        if (error) throw error
-        setElecRecords(prev => [...prev, data[0]])
-        showToast('success', 'Payment added!')
-      }
-      cancelElecEdit()
-    } catch (error) {
-      showToast('error', 'Failed to save: ' + error.message)
-    } finally {
-      setElecSaving(false)
-    }
-  }
-
-  const markElecUnpaid = async (record) => {
-    setElecSaving(true)
-    try {
-      const { error } = await supabase
-        .from('electricity_payments')
-        .delete()
-        .eq('id', record.id)
-      if (error) throw error
-      setElecRecords(prev => prev.filter(r => r.id !== record.id))
-      cancelElecEdit()
-      showToast('success', 'Marked as pending!')
-    } catch (error) {
-      showToast('error', 'Failed to update: ' + error.message)
-    } finally {
-      setElecSaving(false)
-    }
-  }
 
   useEffect(() => {
     fetchTransactions()
@@ -1270,110 +1200,36 @@ export default function FinanceApp() {
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Flat No.</th>
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Amount</th>
                           <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">USN No.</th>
-                          <th className="px-6 py-4 text-xs text-zinc-400 font-semibold uppercase tracking-wider">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {elecStatusFilter === 'pending' ? (
                           pendingRows.length === 0 ? (
-                            <tr><td colSpan={4} className="text-center py-16 text-zinc-500">
+                            <tr><td colSpan={3} className="text-center py-16 text-zinc-500">
                               <Zap size={36} className="mx-auto mb-2 opacity-30" />
                               <p className="text-sm">All flats have paid!</p>
                             </td></tr>
-                          ) : pendingRows.map((flatNo, idx) => {
-                            const isAdding = elecEditingKey === `new-${flatNo}`
-                            return (
-                              <tr key={flatNo} className={`border-b border-white/5 hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
-                                <td className="px-6 py-4 font-bold text-white">{flatNo}</td>
-                                {isAdding ? (
-                                  <>
-                                    <td className="px-6 py-2">
-                                      <input type="number" min="0" placeholder="Amount" value={elecEditFields.amount}
-                                        onChange={e => setElecEditFields({ ...elecEditFields, amount: e.target.value })}
-                                        className="w-28 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm outline-none text-white" />
-                                    </td>
-                                    <td className="px-6 py-2">
-                                      <input type="text" placeholder="USN No." value={elecEditFields.usn}
-                                        onChange={e => setElecEditFields({ ...elecEditFields, usn: e.target.value })}
-                                        className="w-36 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm outline-none text-white" />
-                                    </td>
-                                    <td className="px-6 py-2">
-                                      <div className="flex gap-2">
-                                        <button onClick={() => saveElecEdit(null, flatNo)} disabled={elecSaving} className="bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1 disabled:opacity-60">
-                                          <Check size={14} /> Save
-                                        </button>
-                                        <button onClick={cancelElecEdit} className="bg-zinc-700 text-white px-3 py-2 rounded-lg text-xs font-semibold">
-                                          <X size={14} />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </>
-                                ) : (
-                                  <>
-                                    <td className="px-6 py-4 text-zinc-600">—</td>
-                                    <td className="px-6 py-4 text-zinc-600">—</td>
-                                    <td className="px-6 py-4">
-                                      <button onClick={() => startElecAdd(flatNo)} className="flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300 transition-colors">
-                                        <Plus size={14} /> Add
-                                      </button>
-                                    </td>
-                                  </>
-                                )}
-                              </tr>
-                            )
-                          })
+                          ) : pendingRows.map((flatNo, idx) => (
+                            <tr key={flatNo} className={`border-b border-white/5 hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
+                              <td className="px-6 py-4 font-bold text-white">{flatNo}</td>
+                              <td className="px-6 py-4 text-zinc-600">—</td>
+                              <td className="px-6 py-4 text-zinc-600">—</td>
+                            </tr>
+                          ))
                         ) : filtered.length === 0 ? (
-                          <tr><td colSpan={4} className="text-center py-16 text-zinc-500 text-sm">No records found.</td></tr>
+                          <tr><td colSpan={3} className="text-center py-16 text-zinc-500 text-sm">No records found.</td></tr>
                         ) : (
-                          filtered.map((record, idx) => {
-                            const isEditing = elecEditingKey === `rec-${record.id}`
-                            return (
-                              <tr key={record.id || idx} className={`border-b border-white/5 hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
-                                <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
-                                {isEditing ? (
-                                  <>
-                                    <td className="px-6 py-2">
-                                      <input type="number" min="0" placeholder="Amount" value={elecEditFields.amount}
-                                        onChange={e => setElecEditFields({ ...elecEditFields, amount: e.target.value })}
-                                        className="w-28 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm outline-none text-white" />
-                                    </td>
-                                    <td className="px-6 py-2">
-                                      <input type="text" placeholder="USN No." value={elecEditFields.usn}
-                                        onChange={e => setElecEditFields({ ...elecEditFields, usn: e.target.value })}
-                                        className="w-36 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm outline-none text-white" />
-                                    </td>
-                                    <td className="px-6 py-2">
-                                      <div className="flex gap-2">
-                                        <button onClick={() => saveElecEdit(record, record.flat_no)} disabled={elecSaving} className="bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1 disabled:opacity-60">
-                                          <Check size={14} /> Save
-                                        </button>
-                                        <button onClick={cancelElecEdit} className="bg-zinc-700 text-white px-3 py-2 rounded-lg text-xs font-semibold">
-                                          <X size={14} />
-                                        </button>
-                                        <button onClick={() => markElecUnpaid(record)} disabled={elecSaving} className="bg-red-900/60 border border-red-700 text-red-300 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap">
-                                          Mark unpaid
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </>
-                                ) : (
-                                  <>
-                                    <td className="px-6 py-4 text-zinc-300">
-                                      {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
-                                    </td>
-                                    <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
-                                      {record.usn || '—'}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                      <button onClick={() => startElecEdit(record)} className="text-zinc-500 hover:text-blue-400 transition-colors">
-                                        <Pencil size={16} />
-                                      </button>
-                                    </td>
-                                  </>
-                                )}
-                              </tr>
-                            )
-                          })
+                          filtered.map((record, idx) => (
+                            <tr key={record.id || idx} className={`border-b border-white/5 hover:bg-white/5 ${idx % 2 === 0 ? 'bg-zinc-900/30' : 'bg-zinc-800/20'}`}>
+                              <td className="px-6 py-4 font-bold text-white">{record.flat_no}</td>
+                              <td className="px-6 py-4 text-zinc-300">
+                                {record.amount ? `₹ ${Number(record.amount).toLocaleString()}` : '—'}
+                              </td>
+                              <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
+                                {record.usn || '—'}
+                              </td>
+                            </tr>
+                          ))
                         )}
                       </tbody>
                     </table>
