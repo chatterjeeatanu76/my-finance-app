@@ -878,14 +878,14 @@ export default function FinanceApp() {
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
                   <button onClick={() => setReportView(reportView === 'table' ? 'charts' : 'table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><PieChart size={20} /></button>
                 </div>
-                <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
                     { label: 'Savings Ratio', value: `${incomePercentage.toFixed(0)}%`, icon: <TrendingUp className="text-green-400" />, color: 'text-green-400' },
                     { label: 'Expense Ratio', value: `${expensePercentage.toFixed(0)}%`, icon: <TrendingDown className="text-red-400" />, color: 'text-red-400' },
                   ].map(({ label, value, icon, color }) => (
                     <div key={label} className="bg-[#0f1319] rounded-lg p-5 border border-[#1e2433]">
                       <div className="flex items-center justify-between mb-3"><p className="text-zinc-400">{label}</p>{icon}</div>
-                      <h3 className={`text-4xl font-black ${color}`}>{value}</h3>
+                      <h3 className={`text-3xl font-black ${color}`}>{value}</h3>
                     </div>
                   ))}
                   <div className="bg-[#0f1319] rounded-lg p-5 border border-[#1e2433]">
@@ -893,7 +893,7 @@ export default function FinanceApp() {
                       <p className="text-zinc-400">This Month's Expenses</p>
                       <Bell size={18} className={currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400' : 'text-zinc-500'} />
                     </div>
-                    <h3 className={`text-4xl font-black ${currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400' : 'text-white'}`}>
+                    <h3 className={`text-3xl font-black ${currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400' : 'text-white'}`}>
                       ₹ {currentMonthExpense.toLocaleString()}
                     </h3>
                     <p className="text-sm text-zinc-500 mt-1">Budget limit: ₹ {BUDGET_LIMIT.toLocaleString()}</p>
@@ -1011,13 +1011,12 @@ export default function FinanceApp() {
                         <table className="w-full text-left min-w-[560px]">
                           <thead className="sticky top-0 bg-[#151922]">
                             <tr className="border-b border-white/10 text-zinc-400">
-                              {['Title', 'Flat No.', 'Date', 'Category', 'Amount'].map(h => <th key={h} className="pb-4 pr-4 pt-1 text-xs font-semibold uppercase tracking-wider">{h}</th>)}
+                              {['Flat No.', 'Date', 'Category', 'Amount'].map(h => <th key={h} className="pb-4 pr-4 pt-1 text-xs font-semibold uppercase tracking-wider">{h}</th>)}
                             </tr>
                           </thead>
                           <tbody>
                             {reportFiltered.map(item => (
                               <tr key={item.ids ? item.ids.join('-') : item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-4 text-xs pr-4 max-w-[220px]">{item.title}</td>
                                 <td className="py-4 text-xs pr-4 text-zinc-400">{item.flat_no || '—'}</td>
                                 <td className="py-4 text-xs pr-4">{formatDateDisplay(item.date)}</td>
                                 <td className="py-4 text-xs pr-4 max-w-[220px]">{item.category}</td>
