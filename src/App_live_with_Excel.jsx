@@ -204,12 +204,6 @@ export default function FinanceApp() {
 
   // ── Electricity Tracker state ──
   const [elecRecords, setElecRecords] = useState([])
-  const [session, setSession] = useState(null)
-  const [authLoading, setAuthLoading] = useState(true)
-  const [loginEmail, setLoginEmail] = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [loginError, setLoginError] = useState('')
-  const [loginLoading, setLoginLoading] = useState(false)
   const [elecLoading, setElecLoading] = useState(false)
   const [elecSearch, setElecSearch] = useState('')
   const [elecMonthFilter, setElecMonthFilter] = useState(() => {
@@ -323,22 +317,9 @@ export default function FinanceApp() {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setAuthLoading(false)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-    return () => subscription.unsubscribe()
+    fetchTransactions()
+    fetchCorpusTransactions()
   }, [])
-
-  useEffect(() => {
-    if (session) {
-      fetchTransactions()
-      fetchCorpusTransactions()
-    }
-  }, [session])
 
   const currentMonthExpense = useMemo(() => {
     const now = new Date()
@@ -523,22 +504,6 @@ export default function FinanceApp() {
   const pageLoading = activePage === 'corpus' ? corpusLoading : loading
   const refreshTransactions = activePage === 'corpus' ? fetchCorpusTransactions : fetchTransactions
 
-  const handleLogin = async () => {
-    if (!loginEmail || !loginPassword) return
-    setLoginLoading(true)
-    setLoginError('')
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-    if (error) {
-      setLoginError('Invalid email or password. Please try again.')
-    }
-    setLoginLoading(false)
-  }
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setSession(null)
-  }
-
   const downloadExcel = (pageType) => {
     const data = pageType === 'corpus' ? corpusTransactions : transactions
     if (!data || data.length === 0) {
@@ -595,83 +560,6 @@ export default function FinanceApp() {
 
   const formatAmount = (n) => `₹${Number(n).toLocaleString('en-IN')}`
 
-  // Auth loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c0e14]">
-        <Loader2 size={36} className="animate-spin text-zinc-500" />
-      </div>
-    )
-  }
-
-  // Login page
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c0e14] text-white px-4">
-        <div className="w-full max-w-sm">
-          {/* Logo */}
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center mx-auto mb-5 shadow-[0_0_40px_rgba(124,58,237,0.4)]">
-              <Landmark size={30} className="text-white" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Green Meadows</h1>
-            <p className="text-zinc-500 text-sm mt-1">Block A · Balance Sheet</p>
-          </div>
-
-          {/* Login Card */}
-          <div className="bg-[#0f1319] border border-[#1e2433] rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-lg font-semibold mb-6">Sign in to continue</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-zinc-500 mb-1.5 block">Email</label>
-                <input
-                  type="email"
-                  value={loginEmail}
-                  onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
-                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder="Enter your email"
-                  className="w-full bg-[#151922] border border-[#1e2433] rounded-xl px-4 py-3 outline-none text-white placeholder:text-zinc-600 focus:border-violet-600 transition-colors text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-500 mb-1.5 block">Password</label>
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={e => { setLoginPassword(e.target.value); setLoginError('') }}
-                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder="Enter your password"
-                  className="w-full bg-[#151922] border border-[#1e2433] rounded-xl px-4 py-3 outline-none text-white placeholder:text-zinc-600 focus:border-violet-600 transition-colors text-sm"
-                />
-              </div>
-
-              {loginError && (
-                <div className="flex items-center gap-2 bg-red-950/60 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">
-                  <AlertCircle size={15} />
-                  {loginError}
-                </div>
-              )}
-
-              <button
-                onClick={handleLogin}
-                disabled={!loginEmail || !loginPassword || loginLoading}
-                className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition-all mt-2 flex items-center justify-center gap-2"
-              >
-                {loginLoading ? <><Loader2 size={17} className="animate-spin" /> Signing in...</> : 'Login'}
-              </button>
-            </div>
-          </div>
-
-          <p className="text-center text-zinc-600 text-xs mt-6">
-            Green Meadows Society Management · Block A
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex bg-[#0c0e14] text-white">
 
@@ -721,7 +609,7 @@ export default function FinanceApp() {
           <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold text-white">GM</div>
           <span className="font-semibold text-white">Green Meadows</span>
         </div>
-        <nav className="flex flex-col gap-1 flex-1">
+        <nav className="flex flex-col gap-1">
           {NAV_ITEMS.map(({ page, label, icon: Icon }) => (
             <button
               key={page}
@@ -737,22 +625,6 @@ export default function FinanceApp() {
             </button>
           ))}
         </nav>
-        {/* User info + Logout */}
-        <div className="mt-auto border-t border-[#1e2433] pt-4">
-          <div className="flex items-center gap-3 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300">
-              {session?.user?.email?.charAt(0).toUpperCase()}
-            </div>
-            <p className="text-xs text-zinc-400 truncate flex-1">{session?.user?.email}</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-red-400 hover:bg-red-950/30 transition-colors"
-          >
-            <X size={17} />
-            Logout
-          </button>
-        </div>
       </aside>
 
       {/* Main */}
