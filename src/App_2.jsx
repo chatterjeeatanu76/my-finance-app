@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import * as XLSX from 'xlsx'
 import {
   Plus, Wallet, TrendingUp, TrendingDown, PieChart,
-  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw, Landmark, Search, ChevronDown, Download
+  Home, BarChart3, X, Loader2, AlertCircle, CheckCircle, Bell, BellOff, Pencil, Check, Zap, RefreshCw, Landmark, Search, ChevronDown
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
@@ -503,31 +502,6 @@ export default function FinanceApp() {
 
   const pageLoading = activePage === 'corpus' ? corpusLoading : loading
   const refreshTransactions = activePage === 'corpus' ? fetchCorpusTransactions : fetchTransactions
-
-  const downloadExcel = (pageType) => {
-    const data = pageType === 'corpus' ? corpusTransactions : transactions
-    if (!data || data.length === 0) {
-      showToast('error', 'No data to download')
-      return
-    }
-    const rows = data.map(t => ({
-      'Date': formatDateDisplay(t.date),
-      'Flat No.': t.flat_no || '—',
-      'Category': t.category || '—',
-      'Type': t.type === 'income' ? 'Income' : 'Expense',
-      'Amount (₹)': Number(t.amount),
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows)
-    ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 10 }, { wch: 14 }]
-    const wb = XLSX.utils.book_new()
-    const sheetName = pageType === 'corpus' ? 'Corpus Fund' : 'Transactions'
-    XLSX.utils.book_append_sheet(wb, ws, sheetName)
-    const fileName = pageType === 'corpus'
-      ? `GreenMeadows_CorpusFund_${new Date().toISOString().slice(0, 10)}.xlsx`
-      : `GreenMeadows_Transactions_${new Date().toISOString().slice(0, 10)}.xlsx`
-    XLSX.writeFile(wb, fileName)
-    showToast('success', 'Excel downloaded!')
-  }
   const corpusBalance = corpusIncome - corpusExpense
   const corpusUsedPercent = corpusIncome > 0
     ? Math.min((corpusExpense / corpusIncome) * 100, 100)
@@ -852,14 +826,6 @@ export default function FinanceApp() {
                   </div>
                   <button onClick={refreshTransactions} className="p-2.5 rounded-lg border border-[#1e2433] bg-[#0f1319] hover:bg-[#1a2030] transition-colors" title="Refresh">
                     <Loader2 size={16} className={`text-zinc-400 ${pageLoading ? 'animate-spin' : ''}`} />
-                  </button>
-                  <button
-                    onClick={() => downloadExcel(activePage)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-green-700/40 bg-green-900/20 hover:bg-green-900/40 transition-colors text-green-400 text-sm font-semibold"
-                    title="Download Excel"
-                  >
-                    <Download size={15} />
-                    <span className="hidden sm:inline">Download Excel</span>
                   </button>
                 </div>
               </div>
