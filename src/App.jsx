@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import {
   PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
-  Tooltip, LineChart, Line, CartesianGrid, XAxis, YAxis,
+  Tooltip, LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar, Legend,
 } from 'recharts'
 
 const supabase = createClient(
@@ -591,6 +591,26 @@ export default function FinanceApp() {
         return { name: label, income: g.income, expense: g.expense }
       })
   }, [transactions])
+
+  const incomeBreakdown = useMemo(() => {
+    const grouped = {}
+    transactions.filter(t => t.type === 'income').forEach(t => {
+      const cat = t.category || 'Others'
+      grouped[cat] = (grouped[cat] || 0) + Number(t.amount)
+    })
+    return Object.entries(grouped).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+  }, [transactions])
+
+  const expenseBreakdown = useMemo(() => {
+    const grouped = {}
+    transactions.filter(t => t.type === 'expense').forEach(t => {
+      const cat = t.category || 'Others'
+      grouped[cat] = (grouped[cat] || 0) + Number(t.amount)
+    })
+    return Object.entries(grouped).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+  }, [transactions])
+
+  const DONUT_COLORS = ['#4ade80','#60a5fa','#f59e0b','#f87171','#a78bfa','#34d399','#fb923c','#38bdf8','#e879f9','#facc15']
   const COLORS = ['#22c55e', '#ef4444']
 
   const formatAmount = (n) => `₹${Number(n).toLocaleString('en-IN')}`
@@ -1266,32 +1286,93 @@ export default function FinanceApp() {
               )}
             </div>
 
-            <div className={`${panel} p-6 h-[400px]`}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-semibold">Income & Expense Trends</h2>
-                <div className="flex items-center gap-4 text-xs text-zinc-400">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>Income</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>Expense</span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Bar Chart — Financial Trend */}
+              <div className={`${panel} p-6`}>
+                <h2 className="text-lg font-semibold mb-1">Financial Trend</h2>
+                <div className="flex items-center gap-4 text-xs text-zinc-400 mb-4">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-green-400 inline-block"></span>Income</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block"></span>Expenditure</span>
                 </div>
+                {monthlyData.length === 0 ? (
+                  <div className="flex items-center justify-center h-64 text-zinc-500 text-sm">No data yet.</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }} barCategoryGap="30%">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e2433" vertical={false} />
+                      <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#71717a" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                      <Tooltip
+                        formatter={(value, name) => [`₹ ${Number(value).toLocaleString()}`, name === 'income' ? 'Income' : 'Expenditure']}
+                        contentStyle={{ background: '#0f1319', border: '1px solid #1e2433', borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: '#fff' }}
+                      />
+                      <Bar dataKey="income" fill="#4ade80" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expense" fill="#f87171" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
-              {monthlyData.length === 0 ? (
-                <div className="flex items-center justify-center h-[85%] text-zinc-500 text-sm">No data to display yet.</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="85%">
-                  <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                    <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={{ stroke: '#27272a' }} />
-                    <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                    <Tooltip
-                      formatter={(value, name) => [`₹ ${Number(value).toLocaleString()}`, name === 'income' ? 'Income' : 'Expense']}
-                      contentStyle={{ background: '#151922', border: '1px solid #1e2433', borderRadius: 8, fontSize: 12 }}
-                      labelStyle={{ color: '#fff' }}
-                    />
-                    <Line type="monotone" dataKey="income" stroke="#4ade80" strokeWidth={2.5} dot={{ fill: '#4ade80', r: 3 }} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="expense" stroke="#f87171" strokeWidth={2.5} dot={{ fill: '#f87171', r: 3 }} activeDot={{ r: 5 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
+
+              {/* Income Breakdown Donut */}
+              <div className={`${panel} p-6`}>
+                <h2 className="text-lg font-semibold mb-4">Income Breakdown</h2>
+                {incomeBreakdown.length === 0 ? (
+                  <div className="flex items-center justify-center h-64 text-zinc-500 text-sm">No income data.</div>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RePieChart>
+                        <Pie data={incomeBreakdown} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" paddingAngle={2}>
+                          {incomeBreakdown.map((_, i) => <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} stroke="transparent" />)}
+                        </Pie>
+                        <Tooltip formatter={(value) => `₹ ${Number(value).toLocaleString()}`} contentStyle={{ background: '#0f1319', border: '1px solid #1e2433', borderRadius: 8, fontSize: 12 }} />
+                      </RePieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-3 space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      {incomeBreakdown.map((item, i) => (
+                        <div key={item.name} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }}></span>
+                            <span className="text-zinc-300 truncate max-w-[120px]">{item.name}</span>
+                          </div>
+                          <span className="text-zinc-400">₹{Number(item.value).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Expense Breakdown Donut */}
+              <div className={`${panel} p-6`}>
+                <h2 className="text-lg font-semibold mb-4">Expense Breakdown</h2>
+                {expenseBreakdown.length === 0 ? (
+                  <div className="flex items-center justify-center h-64 text-zinc-500 text-sm">No expense data.</div>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RePieChart>
+                        <Pie data={expenseBreakdown} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" paddingAngle={2}>
+                          {expenseBreakdown.map((_, i) => <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} stroke="transparent" />)}
+                        </Pie>
+                        <Tooltip formatter={(value) => `₹ ${Number(value).toLocaleString()}`} contentStyle={{ background: '#0f1319', border: '1px solid #1e2433', borderRadius: 8, fontSize: 12 }} />
+                      </RePieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-3 space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      {expenseBreakdown.map((item, i) => (
+                        <div key={item.name} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }}></span>
+                            <span className="text-zinc-300 truncate max-w-[120px]">{item.name}</span>
+                          </div>
+                          <span className="text-zinc-400">₹{Number(item.value).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
