@@ -673,7 +673,7 @@ export default function FinanceApp() {
   }
 
   return (
-    <div className="h-screen flex bg-[#0c0e14] text-white overflow-hidden">
+    <div className="min-h-screen flex bg-[#0c0e14] text-white">
 
       {/* Toast */}
       {toast && (
@@ -716,7 +716,7 @@ export default function FinanceApp() {
       )}
 
       {/* Sidebar — desktop */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col bg-[#080a0f] border-r border-[#1e2433] px-4 py-6 h-screen sticky top-0">
+      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col bg-[#080a0f] border-r border-[#1e2433] px-4 py-6">
         <div className="flex items-center gap-3 px-2 mb-8">
           <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold text-white">GM</div>
           <span className="font-semibold text-white">Green Meadows</span>
@@ -757,7 +757,7 @@ export default function FinanceApp() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen pb-24 md:pb-8">
+        <main className="flex-1 p-4 md:p-8 overflow-auto pb-24 md:pb-8">
           <p className="text-[11px] font-semibold tracking-widest text-zinc-500 uppercase mb-1">Green Meadows : Block A</p>
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{PAGE_TITLES[activePage]}</h1>
 
