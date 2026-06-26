@@ -32,7 +32,7 @@ const NAV_ITEMS = [
 ]
 
 const panel = 'bg-[#151922] border border-[#1e2433] rounded-xl'
-const inputCls = 'w-full bg-[#0f1319] border border-[#1e2433] rounded-lg px-4 py-2.5 outline-none text-white text-sm placeholder:text-zinc-500 focus:border-violet-500/40'
+const inputCls = 'w-full bg-[#0f1319] border border-[#1e2433] rounded-lg px-4 py-2.5 outline-none text-white text-sm placeholder:text-zinc-500 focus:border-violet-500/40 [color-scheme:dark]'
 
 function formatDateDisplay(isoDate) {
   if (!isoDate) return ''
