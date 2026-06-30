@@ -47,7 +47,7 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage', 'Electricity Bill', 'Water Bill', 'Watchman Salary', 'Security Salary', 'Festival', 'Others']
+const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage Collection', 'Water Bill', 'Water Tanker Bill', 'Electricity Bill', 'Watchman Salary', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Collection', 'Others']
 const CORPUS_INCOME_CATEGORIES = ['Corpus Fund']
 const CORPUS_EXPENSE_CATEGORIES = ['New Pump Instalation', 'Water Treatment', 'Others']
 
