@@ -48,7 +48,7 @@ function parseDateInput(ddmmyyyy) {
 }
 
 const HOME_INCOME_CATEGORIES = ['Maintenance Cost', 'Water Bill', 'Garbage Collection', 'Others']
-const HOME_EXPENSE_CATEGORIES = ['Water Tanker Bill', 'Watchman Salary', 'Electricity Bill', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Collection', 'Others']
+const HOME_EXPENSE_CATEGORIES = ['Water Tanker Bill', 'Watchman Salary', 'Electricity Bill', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Payment', 'Others']
 const CORPUS_INCOME_CATEGORIES = ['Corpus Fund']
 const CORPUS_EXPENSE_CATEGORIES = ['New Pump Instalation', 'Water Treatment', 'Others']
 
