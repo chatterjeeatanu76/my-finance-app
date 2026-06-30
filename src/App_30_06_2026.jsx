@@ -155,11 +155,6 @@ export default function FinanceApp() {
   const [selectedMonth, setSelectedMonth] = useState('')
   const [reportSearchQuery, setReportSearchQuery] = useState('')
   const [reportSelectedMonth, setReportSelectedMonth] = useState('')
-  const [dashboardMonth, setDashboardMonth] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
-  const [showOverallModal, setShowOverallModal] = useState(false)
   const [mergeByFlat, setMergeByFlat] = useState(true)
   const [navVisible, setNavVisible] = useState(true)
   const lastScrollY = React.useRef(0)
@@ -576,20 +571,6 @@ export default function FinanceApp() {
   const pageIncome = activePage === 'corpus' ? corpusIncome : totalIncome
   const pageExpense = activePage === 'corpus' ? corpusExpense : totalExpense
   const pageBalance = activePage === 'corpus' ? corpusBalance : balance
-
-  const dashboardMonthIncome = useMemo(
-    () => transactions.filter(t => t.type === 'income' && t.date?.slice(0, 7) === dashboardMonth).reduce((s, t) => s + Number(t.amount), 0),
-    [transactions, dashboardMonth]
-  )
-  const dashboardMonthExpense = useMemo(
-    () => transactions.filter(t => t.type === 'expense' && t.date?.slice(0, 7) === dashboardMonth).reduce((s, t) => s + Number(t.amount), 0),
-    [transactions, dashboardMonth]
-  )
-  const dashboardMonthBalance = dashboardMonthIncome - dashboardMonthExpense
-  const dashboardMonthLabel = (() => {
-    const [y, m] = dashboardMonth.split('-')
-    return new Date(Number(y), Number(m) - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' })
-  })()
   const expensePercentage = totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0
   const incomePercentage = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0
   const chartData = [{ name: 'Income', value: totalIncome }, { name: 'Expense', value: totalExpense }]
@@ -754,65 +735,6 @@ export default function FinanceApp() {
         </div>
       )}
 
-      {/* Overall View Modal */}
-      {showOverallModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4" onClick={() => setShowOverallModal(false)}>
-          <div className={`${panel} w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6`} onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-xl font-bold text-white">Overall View</h2>
-              <button onClick={() => setShowOverallModal(false)} className="text-zinc-500 hover:text-white transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-            <p className="text-xs text-zinc-500 mb-5">All-time totals across every transaction</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              {[
-                { label: 'Total Income', value: formatAmount(totalIncome), icon: TrendingUp, badge: 'bg-green-900/60 border-green-700 text-green-400' },
-                { label: 'Total Expense', value: formatAmount(totalExpense), icon: TrendingDown, badge: 'bg-red-900/60 border-red-700 text-red-400' },
-                { label: 'Total Balance', value: formatAmount(balance), icon: Wallet, badge: 'bg-blue-900/60 border-blue-700 text-blue-400' },
-              ].map(({ label, value, icon: Icon, badge }) => (
-                <div key={label} className="bg-[#0f1319] border border-[#1e2433] rounded-xl p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-xs text-zinc-400 mb-1.5">{label}</p>
-                      <p className="text-lg md:text-xl font-bold text-white">{value}</p>
-                    </div>
-                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${badge}`}>
-                      <Icon size={14} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <h3 className="text-sm font-semibold text-zinc-300 mb-1">Month-wise Trend</h3>
-            <div className="flex items-center gap-4 text-xs text-zinc-400 mb-3">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-green-400 inline-block"></span>Income</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block"></span>Expense</span>
-            </div>
-            {monthlyData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 text-zinc-500 text-sm">No data yet.</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2433" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#71717a" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                  <Tooltip
-                    formatter={(value, name) => [`₹ ${Number(value).toLocaleString()}`, name === 'income' ? 'Income' : 'Expense']}
-                    contentStyle={{ background: '#0f1319', border: '1px solid #1e2433', borderRadius: 8, fontSize: 12 }}
-                    labelStyle={{ color: '#fff' }}
-                  />
-                  <Bar dataKey="income" fill="#4ade80" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expense" fill="#f87171" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Sidebar — desktop */}
       <aside className="hidden md:flex w-64 flex-shrink-0 flex-col bg-[#080a0f] border-r border-[#1e2433] px-4 py-6 h-screen sticky top-0">
         <div className="flex items-center gap-3 px-2 mb-8">
@@ -857,26 +779,7 @@ export default function FinanceApp() {
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen pb-24 md:pb-8">
           <p className="text-[11px] font-semibold tracking-widest text-zinc-500 uppercase mb-1">Green Meadows : Block A</p>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-white">{PAGE_TITLES[activePage]}</h1>
-            {activePage === 'home' && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="month"
-                  value={dashboardMonth}
-                  onChange={e => setDashboardMonth(e.target.value)}
-                  className={`${inputCls} w-auto`}
-                />
-                <button
-                  onClick={() => setShowOverallModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
-                >
-                  <BarChart3 size={15} />
-                  Overall View
-                </button>
-              </div>
-            )}
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{PAGE_TITLES[activePage]}</h1>
 
         {/* Monthly Budget Bar — home page only */}
         {activePage === 'home' && currentMonthExpense > 0 && (
@@ -987,30 +890,25 @@ export default function FinanceApp() {
 
         {/* Summary Cards — home & corpus pages */}
         {isHomeLikePage && (
-          <>
-            {activePage === 'home' && (
-              <p className="text-xs text-zinc-500 mb-3 -mt-2">Showing data for <span className="text-zinc-300 font-medium">{dashboardMonthLabel}</span></p>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              {[
-                { label: activePage === 'corpus' ? 'Received' : 'Income', value: formatAmount(activePage === 'home' ? dashboardMonthIncome : pageIncome), icon: TrendingUp, badge: 'bg-green-900/60 border-green-700 text-green-400' },
-                { label: activePage === 'corpus' ? 'Used' : 'Expense', value: formatAmount(activePage === 'home' ? dashboardMonthExpense : pageExpense), icon: TrendingDown, badge: 'bg-red-900/60 border-red-700 text-red-400' },
-                { label: 'Balance', value: formatAmount(activePage === 'home' ? dashboardMonthBalance : pageBalance), icon: Wallet, badge: 'bg-blue-900/60 border-blue-700 text-blue-400' },
-              ].map(({ label, value, icon: Icon, badge }) => (
-                <div key={label} className={`${panel} p-5 relative`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-zinc-400 mb-2">{label}</p>
-                      <p className="text-2xl md:text-3xl font-bold text-white">{value}</p>
-                    </div>
-                    <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${badge}`}>
-                      <Icon size={16} />
-                    </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {[
+              { label: activePage === 'corpus' ? 'Received' : 'Income', value: formatAmount(pageIncome), icon: TrendingUp, badge: 'bg-green-900/60 border-green-700 text-green-400' },
+              { label: activePage === 'corpus' ? 'Used' : 'Expense', value: formatAmount(pageExpense), icon: TrendingDown, badge: 'bg-red-900/60 border-red-700 text-red-400' },
+              { label: 'Balance', value: formatAmount(pageBalance), icon: Wallet, badge: 'bg-blue-900/60 border-blue-700 text-blue-400' },
+            ].map(({ label, value, icon: Icon, badge }) => (
+              <div key={label} className={`${panel} p-5 relative`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-zinc-400 mb-2">{label}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-white">{value}</p>
+                  </div>
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${badge}`}>
+                    <Icon size={16} />
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Home & Corpus Pages */}
