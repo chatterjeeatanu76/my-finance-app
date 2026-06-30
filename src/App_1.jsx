@@ -47,8 +47,7 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const HOME_INCOME_CATEGORIES = ['Maintenance Cost', 'Water Bill', 'Garbage Collection', 'Others']
-const HOME_EXPENSE_CATEGORIES = ['Water Tanker Bill', 'Watchman Salary', 'Electricity Bill', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Collection', 'Others']
+const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage Collection', 'Water Bill', 'Water Tanker Bill', 'Electricity Bill', 'Watchman Salary', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Collection', 'Others']
 const CORPUS_INCOME_CATEGORIES = ['Corpus Fund']
 const CORPUS_EXPENSE_CATEGORIES = ['New Pump Instalation', 'Water Treatment', 'Others']
 
@@ -56,7 +55,7 @@ function getCategories(page, transactionType) {
   if (page === 'corpus') {
     return transactionType === 'income' ? CORPUS_INCOME_CATEGORIES : CORPUS_EXPENSE_CATEGORIES
   }
-  return transactionType === 'income' ? HOME_INCOME_CATEGORIES : HOME_EXPENSE_CATEGORIES
+  return STANDARD_CATEGORIES
 }
 
 function isCustomCategory(cat, page = 'home', transactionType = 'expense') {
