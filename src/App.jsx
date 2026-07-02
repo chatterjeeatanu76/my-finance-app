@@ -1332,7 +1332,7 @@ export default function FinanceApp() {
               </button>
               */}
             </div>
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 mb-6">
               <div className={`${panel} p-6`}>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
