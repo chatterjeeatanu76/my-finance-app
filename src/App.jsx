@@ -1320,9 +1320,11 @@ export default function FinanceApp() {
 
         {/* Reports Page */}
         {activePage === 'reports' && (
-          <div className="space-y-6">
+         {/* <div className="space-y-6">
             <div className="flex items-center justify-between mb-2">
               <div />
+
+              }
               <button
                 onClick={() => setShowOverallModal(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
@@ -1330,11 +1332,22 @@ export default function FinanceApp() {
                 <BarChart3 size={15} />
                 Overall View
               </button>
-            </div>
+
+              
+            </div>*/}
             <div className="flex flex-col gap-6">
               <div className={`${panel} p-6`}>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
+
+                <button
+                  onClick={() => setShowOverallModal(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
+                >
+                  <BarChart3 size={15} />
+                  Overall View
+                </button>
+
                   <button onClick={() => setReportView(reportView === 'table' ? 'charts' : 'table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><PieChart size={20} /></button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
