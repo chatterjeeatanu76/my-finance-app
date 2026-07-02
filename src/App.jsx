@@ -1320,22 +1320,7 @@ export default function FinanceApp() {
 
         {/* Reports Page */}
         {activePage === 'reports' && (
-         {/* <div className="space-y-6">
-            <div className="flex items-center justify-between mb-2">
-              <div />
-
-              }
-              <button
-                onClick={() => setShowOverallModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
-              >
-                <BarChart3 size={15} />
-                Overall View
-              </button>
-
-              
-            </div>*/}
-            <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6">
               <div className={`${panel} p-6`}>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
@@ -1505,8 +1490,10 @@ export default function FinanceApp() {
                 </div>
               )}
             </div>
+          </div>
+        )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Bar Chart — Financial Trend */}
               <div className={`${panel} p-6`}>
                 <h2 className="text-lg font-semibold mb-1">Financial Trend</h2>
