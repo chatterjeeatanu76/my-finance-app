@@ -48,7 +48,7 @@ function parseDateInput(ddmmyyyy) {
 }
 
 const HOME_INCOME_CATEGORIES = ['Maintenance Cost', 'Water Bill', 'Garbage Collection', 'Others']
-const HOME_EXPENSE_CATEGORIES = ['Water Tanker Bill', 'Watchman Salary', 'Electricity Bill', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Collection', 'Others']
+const HOME_EXPENSE_CATEGORIES = ['Water Tanker Bill', 'Watchman Salary', 'Electricity Bill', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Payment', 'Others']
 const CORPUS_INCOME_CATEGORIES = ['Corpus Fund']
 const CORPUS_EXPENSE_CATEGORIES = ['New Pump Instalation', 'Water Treatment', 'Others']
 
@@ -153,12 +153,7 @@ export default function FinanceApp() {
   const [editFields, setEditFields] = useState({})
   const [editOtherCategory, setEditOtherCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date()
-    return String(now.getMonth() + 1).padStart(2, '0')
-  })
-  const [dashboardTypeFilter, setDashboardTypeFilter] = useState('all')
-  const [dashboardMergeByFlat, setDashboardMergeByFlat] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState('')
   const [reportSearchQuery, setReportSearchQuery] = useState('')
   const [reportSelectedMonth, setReportSelectedMonth] = useState('')
   const [dashboardMonth, setDashboardMonth] = useState(() => {
@@ -885,33 +880,6 @@ export default function FinanceApp() {
           </div>
 
         {/* Monthly Budget Bar — home page only */}
-        {activePage === 'home' && dashboardMonthIncome > 0 && (
-          <div className={`${panel} p-5 mb-6`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-zinc-300">Income vs Expenditure — {dashboardMonthLabel}</span>
-              <span className="text-xs text-zinc-500">
-                <span className="text-green-400 font-semibold">₹{dashboardMonthIncome.toLocaleString()}</span>
-                <span className="text-zinc-600"> / </span>
-                <span className="text-red-400 font-semibold">₹{dashboardMonthExpense.toLocaleString()}</span>
-              </span>
-            </div>
-            <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden flex">
-              <div
-                className="h-3 bg-green-500 transition-all duration-700 rounded-l-full"
-                style={{ width: `${dashboardMonthIncome > 0 ? Math.min((dashboardMonthIncome / (dashboardMonthIncome + dashboardMonthExpense)) * 100, 100) : 0}%` }}
-              />
-              <div
-                className="h-3 bg-red-500 transition-all duration-700 rounded-r-full"
-                style={{ width: `${dashboardMonthIncome > 0 ? Math.min((dashboardMonthExpense / (dashboardMonthIncome + dashboardMonthExpense)) * 100, 100) : 0}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-xs text-zinc-500">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Income {dashboardMonthIncome > 0 ? Math.round((dashboardMonthIncome / (dashboardMonthIncome + dashboardMonthExpense)) * 100) : 0}%</span>
-              <span>{dashboardMonthBalance >= 0 ? <span className="text-green-400">₹{dashboardMonthBalance.toLocaleString()} surplus</span> : <span className="text-red-400">₹{Math.abs(dashboardMonthBalance).toLocaleString()} deficit</span>}</span>
-              <span className="flex items-center gap-1.5">Expense {dashboardMonthIncome > 0 ? Math.round((dashboardMonthExpense / (dashboardMonthIncome + dashboardMonthExpense)) * 100) : 0}% <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span></span>
-            </div>
-          </div>
-        )}
         {activePage === 'home' && currentMonthExpense > 0 && (
           <div className={`${panel} p-5 mb-6 ${
             currentMonthExpense >= BUDGET_LIMIT
@@ -1099,81 +1067,51 @@ export default function FinanceApp() {
             </div>
 
             <div className={`${panel} overflow-hidden`}>
-              <div className="p-5 border-b border-[#1e2433] flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-white">Transactions</h2>
-                    <p className="text-sm text-zinc-500 mt-0.5">
-                      {activePage === 'home'
-                        ? `${['January','February','March','April','May','June','July','August','September','October','November','December'][parseInt(selectedMonth)-1] || 'All months'} — merged by flat`
-                        : 'Monthly overview of all transactions'}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {/* All / Income / Expenditure filter — home page only */}
-                    {activePage === 'home' && (
-                      <div className="flex bg-[#0f1319] border border-[#1e2433] rounded-lg p-1 gap-1">
-                        {[['all','All'],['income','Income'],['expense','Expenditure']].map(([val, label]) => (
-                          <button
-                            key={val}
-                            onClick={() => setDashboardTypeFilter(val)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                              dashboardTypeFilter === val
-                                ? val === 'income' ? 'bg-green-600 text-white' : val === 'expense' ? 'bg-red-600 text-white' : 'bg-violet-600 text-white'
-                                : 'text-zinc-400 hover:text-white'
-                            }`}
-                          >{label}</button>
-                        ))}
-                      </div>
-                    )}
-                    <div className="relative">
-                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Search..."
-                        className={`${inputCls} pl-9 pr-9 min-w-[160px]`}
-                      />
-                      {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <select
-                        value={selectedMonth}
-                        onChange={e => setSelectedMonth(e.target.value)}
-                        className={`${inputCls} pr-9 appearance-none min-w-[130px]`}
-                      >
-                        <option value="">All Months</option>
-                        {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-                          <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
-                        ))}
-                      </select>
-                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-                    </div>
-                    {/* Merge by flat toggle — home page only */}
-                    {activePage === 'home' && (
-                      <button
-                        onClick={() => setDashboardMergeByFlat(!dashboardMergeByFlat)}
-                        className={`text-xs px-3 py-2.5 rounded-lg border transition-all whitespace-nowrap ${dashboardMergeByFlat ? 'bg-violet-600/20 border-violet-500/40 text-violet-300' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'}`}
-                      >
-                        {dashboardMergeByFlat ? '✓ Merged' : 'Merge by flat'}
+              <div className="p-5 border-b border-[#1e2433] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Transactions</h2>
+                  <p className="text-sm text-zinc-500 mt-0.5">Monthly overview of all transactions</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                  <div className="relative flex-1 sm:min-w-[220px]">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Search transactions..."
+                      className={`${inputCls} pl-9 pr-9`}
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
+                        <X size={14} />
                       </button>
                     )}
-                    <button onClick={refreshTransactions} className="p-2.5 rounded-lg border border-[#1e2433] bg-[#0f1319] hover:bg-[#1a2030] transition-colors" title="Refresh">
-                      <Loader2 size={16} className={`text-zinc-400 ${pageLoading ? 'animate-spin' : ''}`} />
-                    </button>
-                    <button
-                      onClick={() => downloadExcel(activePage)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-green-700/40 bg-green-900/20 hover:bg-green-900/40 transition-colors text-green-400 text-sm font-semibold"
-                    >
-                      <Download size={15} />
-                      <span className="hidden sm:inline">Excel</span>
-                    </button>
                   </div>
+                  <div className="relative">
+                    <select
+                      value={selectedMonth}
+                      onChange={e => setSelectedMonth(e.target.value)}
+                      className={`${inputCls} pr-9 appearance-none min-w-[140px]`}
+                    >
+                      <option value="">All Months</option>
+                      {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                        <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                  </div>
+                  <button onClick={refreshTransactions} className="p-2.5 rounded-lg border border-[#1e2433] bg-[#0f1319] hover:bg-[#1a2030] transition-colors" title="Refresh">
+                    <Loader2 size={16} className={`text-zinc-400 ${pageLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => downloadExcel(activePage)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-green-700/40 bg-green-900/20 hover:bg-green-900/40 transition-colors text-green-400 text-sm font-semibold"
+                    title="Download Excel"
+                  >
+                    <Download size={15} />
+                    <span className="hidden sm:inline">Download Excel</span>
+                  </button>
                 </div>
               </div>
               {pageLoading ? (
@@ -1192,7 +1130,7 @@ export default function FinanceApp() {
                   )
                 }
                 const q = searchQuery.trim().toLowerCase()
-                let filtered = listTransactions.filter(t => {
+                const filtered = listTransactions.filter(t => {
                   const matchesSearch = !q || (
                     t.category?.toLowerCase().includes(q) ||
                     t.title?.toLowerCase().includes(q) ||
@@ -1201,40 +1139,8 @@ export default function FinanceApp() {
                     formatDateDisplay(t.date).includes(q)
                   )
                   const matchesMonth = !selectedMonth || (t.date && t.date.split('-')[1] === selectedMonth)
-                  const matchesType = activePage !== 'home' || dashboardTypeFilter === 'all' || t.type === dashboardTypeFilter
-                  // Hide electricity from dashboard home merged view
-                  const hideElec = activePage === 'home' && dashboardMergeByFlat && t.category?.toLowerCase().includes('electricity')
-                  return matchesSearch && matchesMonth && matchesType && !hideElec
+                  return matchesSearch && matchesMonth
                 })
-
-                // Merge by flat (home page only)
-                if (activePage === 'home' && dashboardMergeByFlat) {
-                  const groups = new Map()
-                  const order = []
-                  filtered.forEach(item => {
-                    if (!item.flat_no) {
-                      const soloKey = `solo-${item.id}`
-                      groups.set(soloKey, { ...item, categories: [item.category], ids: [item.id] })
-                      order.push(soloKey)
-                      return
-                    }
-                    const key = `${item.flat_no}-${item.date}-${item.type}`
-                    if (groups.has(key)) {
-                      const g = groups.get(key)
-                      g.amount = Number(g.amount) + Number(item.amount)
-                      g.categories.push(item.category)
-                      g.ids.push(item.id)
-                    } else {
-                      groups.set(key, { ...item, categories: [item.category], ids: [item.id] })
-                      order.push(key)
-                    }
-                  })
-                  filtered = order.map(k => {
-                    const g = groups.get(k)
-                    return { ...g, title: g.categories.join(' + '), category: g.categories.join(' + ') }
-                  })
-                }
-
                 const noResultMsg = selectedMonth && !q
                   ? `No transactions in ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(selectedMonth)-1]}`
                   : `No results for "${searchQuery}"`
@@ -1321,16 +1227,6 @@ export default function FinanceApp() {
         {/* Reports Page */}
         {activePage === 'reports' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between mb-2">
-              <div />
-              <button
-                onClick={() => setShowOverallModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
-              >
-                <BarChart3 size={15} />
-                Overall View
-              </button>
-            </div>
             <div className="flex flex-col gap-6">
               <div className={`${panel} p-6`}>
                 <div className="flex items-center justify-between mb-5">

@@ -47,7 +47,8 @@ function parseDateInput(ddmmyyyy) {
   return ddmmyyyy
 }
 
-const STANDARD_CATEGORIES = ['Maintenance Cost', 'Garbage Collection', 'Water Bill', 'Water Tanker Bill', 'Electricity Bill', 'Watchman Salary', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Collection', 'Others']
+const HOME_INCOME_CATEGORIES = ['Maintenance Cost', 'Water Bill', 'Garbage Collection', 'Others']
+const HOME_EXPENSE_CATEGORIES = ['Water Tanker Bill', 'Watchman Salary', 'Electricity Bill', 'Lift Current Bill', 'Generator Diesel Bill', 'GHMC Garbage Payment', 'Others']
 const CORPUS_INCOME_CATEGORIES = ['Corpus Fund']
 const CORPUS_EXPENSE_CATEGORIES = ['New Pump Instalation', 'Water Treatment', 'Others']
 
@@ -55,7 +56,7 @@ function getCategories(page, transactionType) {
   if (page === 'corpus') {
     return transactionType === 'income' ? CORPUS_INCOME_CATEGORIES : CORPUS_EXPENSE_CATEGORIES
   }
-  return STANDARD_CATEGORIES
+  return transactionType === 'income' ? HOME_INCOME_CATEGORIES : HOME_EXPENSE_CATEGORIES
 }
 
 function isCustomCategory(cat, page = 'home', transactionType = 'expense') {
@@ -544,30 +545,6 @@ export default function FinanceApp() {
     setSession(null)
   }
 
-  const downloadExcel = (pageType) => {
-    const data = pageType === 'corpus' ? corpusTransactions : transactions
-    if (!data || data.length === 0) {
-      showToast('error', 'No data to download')
-      return
-    }
-    const rows = data.map(t => ({
-      'Date': formatDateDisplay(t.date),
-      'Flat No.': t.flat_no || '—',
-      'Category': t.category || '—',
-      'Type': t.type === 'income' ? 'Income' : 'Expense',
-      'Amount (₹)': Number(t.amount),
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows)
-    ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 10 }, { wch: 14 }]
-    const wb = XLSX.utils.book_new()
-    const sheetName = pageType === 'corpus' ? 'Corpus Fund' : 'Transactions'
-    XLSX.utils.book_append_sheet(wb, ws, sheetName)
-    const fileName = pageType === 'corpus'
-      ? `GreenMeadows_CorpusFund_${new Date().toISOString().slice(0, 10)}.xlsx`
-      : `GreenMeadows_Transactions_${new Date().toISOString().slice(0, 10)}.xlsx`
-    XLSX.writeFile(wb, fileName)
-    showToast('success', 'Excel downloaded!')
-  }
   const corpusBalance = corpusIncome - corpusExpense
   const corpusUsedPercent = corpusIncome > 0
     ? Math.min((corpusExpense / corpusIncome) * 100, 100)
@@ -590,6 +567,35 @@ export default function FinanceApp() {
     const [y, m] = dashboardMonth.split('-')
     return new Date(Number(y), Number(m) - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' })
   })()
+
+  const downloadExcel = (pageType) => {
+    const data = pageType === 'corpus' ? corpusTransactions : transactions
+    const exportData = pageType === 'home'
+      ? data.filter(t => t.date?.slice(0, 7) === dashboardMonth)
+      : data
+    if (!exportData || exportData.length === 0) {
+      showToast('error', pageType === 'home' ? `No data for ${dashboardMonthLabel}` : 'No data to download')
+      return
+    }
+    const rows = exportData.map(t => ({
+      'Date': formatDateDisplay(t.date),
+      'Flat No.': t.flat_no || '—',
+      'Category': t.category || '—',
+      'Type': t.type === 'income' ? 'Income' : 'Expense',
+      'Amount (₹)': Number(t.amount),
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 10 }, { wch: 14 }]
+    const wb = XLSX.utils.book_new()
+    const sheetName = pageType === 'corpus' ? 'Corpus Fund' : 'Transactions'
+    XLSX.utils.book_append_sheet(wb, ws, sheetName)
+    const fileName = pageType === 'corpus'
+      ? `GreenMeadows_CorpusFund_${new Date().toISOString().slice(0, 10)}.xlsx`
+      : `GreenMeadows_Transactions_${dashboardMonth}.xlsx`
+    XLSX.writeFile(wb, fileName)
+    showToast('success', 'Excel downloaded!')
+  }
+
   const expensePercentage = totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0
   const incomePercentage = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0
   const chartData = [{ name: 'Income', value: totalIncome }, { name: 'Expense', value: totalExpense }]
@@ -1069,7 +1075,11 @@ export default function FinanceApp() {
               <div className="p-5 border-b border-[#1e2433] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-white">Transactions</h2>
-                  <p className="text-sm text-zinc-500 mt-0.5">Monthly overview of all transactions</p>
+                  <p className="text-sm text-zinc-500 mt-0.5">
+                    {activePage === 'home'
+                      ? `Showing transactions for ${dashboardMonthLabel}`
+                      : 'Monthly overview of all transactions'}
+                  </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                   <div className="relative flex-1 sm:min-w-[220px]">
@@ -1087,6 +1097,7 @@ export default function FinanceApp() {
                       </button>
                     )}
                   </div>
+                  {activePage !== 'home' && (
                   <div className="relative">
                     <select
                       value={selectedMonth}
@@ -1100,6 +1111,7 @@ export default function FinanceApp() {
                     </select>
                     <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                   </div>
+                  )}
                   <button onClick={refreshTransactions} className="p-2.5 rounded-lg border border-[#1e2433] bg-[#0f1319] hover:bg-[#1a2030] transition-colors" title="Refresh">
                     <Loader2 size={16} className={`text-zinc-400 ${pageLoading ? 'animate-spin' : ''}`} />
                   </button>
@@ -1137,10 +1149,14 @@ export default function FinanceApp() {
                     String(t.amount).includes(q) ||
                     formatDateDisplay(t.date).includes(q)
                   )
-                  const matchesMonth = !selectedMonth || (t.date && t.date.split('-')[1] === selectedMonth)
+                  const matchesMonth = activePage === 'home'
+                    ? (t.date && t.date.slice(0, 7) === dashboardMonth)
+                    : (!selectedMonth || (t.date && t.date.split('-')[1] === selectedMonth))
                   return matchesSearch && matchesMonth
                 })
-                const noResultMsg = selectedMonth && !q
+                const noResultMsg = activePage === 'home' && !q
+                  ? `No transactions in ${dashboardMonthLabel}`
+                  : selectedMonth && !q
                   ? `No transactions in ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(selectedMonth)-1]}`
                   : `No results for "${searchQuery}"`
                 if (filtered.length === 0) {
