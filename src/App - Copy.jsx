@@ -27,6 +27,7 @@ const PAGE_TITLES = {
 const NAV_ITEMS = [
   { page: 'home', label: 'Dashboard', icon: Home },
   { page: 'corpus', label: 'Corpus Fund', icon: Landmark },
+  { page: 'electricity', label: 'Electricity', icon: Zap },
   { page: 'reports', label: 'Reports', icon: BarChart3 },
 ]
 
@@ -159,10 +160,7 @@ export default function FinanceApp() {
   const [dashboardTypeFilter, setDashboardTypeFilter] = useState('all')
   const [dashboardMergeByFlat, setDashboardMergeByFlat] = useState(true)
   const [reportSearchQuery, setReportSearchQuery] = useState('')
-  const [reportSelectedMonth, setReportSelectedMonth] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
+  const [reportSelectedMonth, setReportSelectedMonth] = useState('')
   const [dashboardMonth, setDashboardMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -621,25 +619,21 @@ export default function FinanceApp() {
 
   const incomeBreakdown = useMemo(() => {
     const grouped = {}
-    transactions
-      .filter(t => t.type === 'income' && (!reportSelectedMonth || t.date?.slice(0, 7) === reportSelectedMonth))
-      .forEach(t => {
-        const cat = t.category || 'Others'
-        grouped[cat] = (grouped[cat] || 0) + Number(t.amount)
-      })
+    transactions.filter(t => t.type === 'income').forEach(t => {
+      const cat = t.category || 'Others'
+      grouped[cat] = (grouped[cat] || 0) + Number(t.amount)
+    })
     return Object.entries(grouped).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
-  }, [transactions, reportSelectedMonth])
+  }, [transactions])
 
   const expenseBreakdown = useMemo(() => {
     const grouped = {}
-    transactions
-      .filter(t => t.type === 'expense' && (!reportSelectedMonth || t.date?.slice(0, 7) === reportSelectedMonth))
-      .forEach(t => {
-        const cat = t.category || 'Others'
-        grouped[cat] = (grouped[cat] || 0) + Number(t.amount)
-      })
+    transactions.filter(t => t.type === 'expense').forEach(t => {
+      const cat = t.category || 'Others'
+      grouped[cat] = (grouped[cat] || 0) + Number(t.amount)
+    })
     return Object.entries(grouped).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
-  }, [transactions, reportSelectedMonth])
+  }, [transactions])
 
   const DONUT_COLORS = ['#4ade80','#60a5fa','#f59e0b','#f87171','#a78bfa','#34d399','#fb923c','#38bdf8','#e879f9','#facc15']
   const COLORS = ['#22c55e', '#ef4444']
@@ -1326,18 +1320,30 @@ export default function FinanceApp() {
 
         {/* Reports Page */}
         {activePage === 'reports' && (
-          <div className="space-y-6">
-            <div className="flex flex-col gap-6">
+          <div className="">
+            <div className="flex items-center justify-between mb-2">
+              <div />
+            {/*  <button
+                onClick={() => setShowOverallModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
+              >
+                <BarChart3 size={15} />
+                Overall View
+              </button>
+              */}
+            </div>
+            <div className="flex flex-col gap-6 mb-6">
               <div className={`${panel} p-6`}>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-2xl font-semibold">Financial Overview</h2>
                   <button
-                    onClick={() => setShowOverallModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
-                  >
-                    <BarChart3 size={15} />
-                    Overall View
-                  </button>
+                onClick={() => setShowOverallModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 transition-colors text-violet-300 text-sm font-semibold whitespace-nowrap"
+              >
+                <BarChart3 size={15} />
+                Overall View
+              </button>
+              {/*   <button onClick={() => setReportView(reportView === 'table' ? 'charts' : 'table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><PieChart size={20} /></button> */}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
@@ -1362,7 +1368,22 @@ export default function FinanceApp() {
                 </div>
               </div>
 
-              {(
+              {reportView === 'charts' ? (
+                <div className={`${panel} p-6 h-[420px]`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-2xl font-semibold">Financial Charts</h2>
+                    <button onClick={() => setReportView('table')} className="bg-white/10 border border-white/10 p-3 rounded-2xl hover:bg-white/20 transition-all"><X size={20} /></button>
+                  </div>
+                  <ResponsiveContainer width="100%" height="85%">
+                    <RePieChart>
+                      <Pie data={chartData} cx="50%" cy="50%" outerRadius={120} dataKey="value">
+                        {chartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value) => `₹ ${Number(value).toLocaleString()}`} />
+                    </RePieChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
                 <div className={`${panel} p-6`}>
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
                     <h2 className="text-lg font-semibold">Transaction Report</h2>
@@ -1383,21 +1404,12 @@ export default function FinanceApp() {
                         )}
                       </div>
                       <div className="relative">
-                        <select
+                        <input
+                          type="month"
                           value={reportSelectedMonth}
                           onChange={e => setReportSelectedMonth(e.target.value)}
-                          className={`${inputCls} pr-9 appearance-none min-w-[150px] [color-scheme:dark]`}
-                        >
-                          <option value="">All Months</option>
-                          {Array.from({ length: 12 }, (_, i) => {
-                            const now = new Date()
-                            const year = now.getFullYear()
-                            const monthStr = String(i + 1).padStart(2, '0')
-                            const label = new Date(year, i, 1).toLocaleString('default', { month: 'long' })
-                            return <option key={i} value={`${year}-${monthStr}`}>{label} {year}</option>
-                          })}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                          className={`${inputCls} min-w-[150px]`}
+                        />
                       </div>
                       {(reportSearchQuery || reportSelectedMonth) && (
                         <button onClick={() => { setReportSearchQuery(''); setReportSelectedMonth('') }} className="text-xs text-zinc-500 hover:text-white whitespace-nowrap">
@@ -1410,7 +1422,7 @@ export default function FinanceApp() {
                       >
                         {mergeByFlat ? '✓ Merged by flat' : 'Merge by flat'}
                       </button>
-
+                      <button onClick={() => setReportView('charts')} className="bg-white/10 border border-white/10 p-2.5 rounded-xl hover:bg-white/20 transition-all flex-shrink-0"><BarChart3 size={18} /></button>
                     </div>
                   </div>
                   {(() => {
@@ -1519,8 +1531,7 @@ export default function FinanceApp() {
 
               {/* Income Breakdown Donut */}
               <div className={`${panel} p-6`}>
-                <h2 className="text-lg font-semibold mb-1">Income Breakdown</h2>
-                <p className="text-xs text-zinc-500 mb-4">{reportSelectedMonth ? new Date(reportSelectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' }) : 'All time'}</p>
+                <h2 className="text-lg font-semibold mb-4">Income Breakdown</h2>
                 {incomeBreakdown.length === 0 ? (
                   <div className="flex items-center justify-center h-64 text-zinc-500 text-sm">No income data.</div>
                 ) : (
@@ -1550,8 +1561,7 @@ export default function FinanceApp() {
 
               {/* Expense Breakdown Donut */}
               <div className={`${panel} p-6`}>
-                <h2 className="text-lg font-semibold mb-1">Expense Breakdown</h2>
-                <p className="text-xs text-zinc-500 mb-4">{reportSelectedMonth ? new Date(reportSelectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' }) : 'All time'}</p>
+                <h2 className="text-lg font-semibold mb-4">Expense Breakdown</h2>
                 {expenseBreakdown.length === 0 ? (
                   <div className="flex items-center justify-center h-64 text-zinc-500 text-sm">No expense data.</div>
                 ) : (
