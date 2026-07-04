@@ -1280,6 +1280,60 @@ export default function FinanceApp() {
                 </div>
               </div>
 
+              {/* Income vs Expense Progress Bar */}
+              {(() => {
+                const reportIncome = transactions
+                  .filter(t => t.type === 'income' && (!reportSelectedMonth || t.date?.slice(0, 7) === reportSelectedMonth))
+                  .reduce((s, t) => s + Number(t.amount), 0)
+                const reportExpense = transactions
+                  .filter(t => t.type === 'expense' && (!reportSelectedMonth || t.date?.slice(0, 7) === reportSelectedMonth))
+                  .reduce((s, t) => s + Number(t.amount), 0)
+                const total = reportIncome + reportExpense
+                const incomePct = total > 0 ? Math.round((reportIncome / total) * 100) : 0
+                const expensePct = total > 0 ? Math.round((reportExpense / total) * 100) : 0
+                const surplus = reportIncome - reportExpense
+                const monthLabel = reportSelectedMonth
+                  ? new Date(reportSelectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })
+                  : 'All time'
+                if (total === 0) return null
+                return (
+                  <div className={`${panel} p-5`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-zinc-200">Income & Expenses — {monthLabel}</h3>
+                        <p className="text-xs text-zinc-500 mt-0.5">Monthly financial performance overview</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-zinc-500">Net</p>
+                        <p className={`text-sm font-bold ${surplus >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {surplus >= 0 ? '+' : '-'}₹{Math.abs(surplus).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden flex mb-2">
+                      <div
+                        className="h-3 bg-green-500 transition-all duration-700"
+                        style={{ width: `${incomePct}%`, borderRadius: expensePct === 0 ? '99px' : '99px 0 0 99px' }}
+                      />
+                      <div
+                        className="h-3 bg-red-500 transition-all duration-700"
+                        style={{ width: `${expensePct}%`, borderRadius: incomePct === 0 ? '99px' : '0 99px 99px 0' }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-zinc-500 mt-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                        Income {incomePct}% &nbsp;·&nbsp; ₹{reportIncome.toLocaleString()}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        ₹{reportExpense.toLocaleString()} &nbsp;·&nbsp; {expensePct}% Expense
+                        <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                      </span>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {(
                 <div className={`${panel} p-6`}>
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
