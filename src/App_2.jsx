@@ -890,6 +890,90 @@ export default function FinanceApp() {
             )}
           </div>
 
+        {/* Monthly Budget Bar — home page only */}
+        {activePage === 'home' && dashboardMonthIncome > 0 && (
+          <div className={`${panel} p-5 mb-6`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-zinc-300">Income vs Expenditure — {dashboardMonthLabel}</span>
+              <span className="text-xs text-zinc-500">
+                <span className="text-green-400 font-semibold">₹{dashboardMonthIncome.toLocaleString()}</span>
+                <span className="text-zinc-600"> / </span>
+                <span className="text-red-400 font-semibold">₹{dashboardMonthExpense.toLocaleString()}</span>
+              </span>
+            </div>
+            <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden flex">
+              <div
+                className="h-3 bg-green-500 transition-all duration-700 rounded-l-full"
+                style={{ width: `${dashboardMonthIncome > 0 ? Math.min((dashboardMonthIncome / (dashboardMonthIncome + dashboardMonthExpense)) * 100, 100) : 0}%` }}
+              />
+              <div
+                className="h-3 bg-red-500 transition-all duration-700 rounded-r-full"
+                style={{ width: `${dashboardMonthIncome > 0 ? Math.min((dashboardMonthExpense / (dashboardMonthIncome + dashboardMonthExpense)) * 100, 100) : 0}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-2 text-xs text-zinc-500">
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Income {dashboardMonthIncome > 0 ? Math.round((dashboardMonthIncome / (dashboardMonthIncome + dashboardMonthExpense)) * 100) : 0}%</span>
+              <span>{dashboardMonthBalance >= 0 ? <span className="text-green-400">₹{dashboardMonthBalance.toLocaleString()} surplus</span> : <span className="text-red-400">₹{Math.abs(dashboardMonthBalance).toLocaleString()} deficit</span>}</span>
+              <span className="flex items-center gap-1.5">Expense {dashboardMonthIncome > 0 ? Math.round((dashboardMonthExpense / (dashboardMonthIncome + dashboardMonthExpense)) * 100) : 0}% <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span></span>
+            </div>
+          </div>
+        )}
+        {activePage === 'home' && currentMonthExpense > 0 && (
+          <div className={`${panel} p-5 mb-6 ${
+            currentMonthExpense >= BUDGET_LIMIT
+              ? 'border-red-800/60'
+              : currentMonthExpense >= BUDGET_LIMIT * 0.8
+              ? 'border-yellow-800/60'
+              : ''
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {currentMonthExpense >= BUDGET_LIMIT
+                  ? <Bell size={18} className="text-red-400" />
+                  : currentMonthExpense >= BUDGET_LIMIT * 0.8
+                  ? <Bell size={18} className="text-yellow-400" />
+                  : <BellOff size={18} className="text-zinc-500" />
+                }
+                <span className="font-semibold text-sm">
+                  {currentMonthExpense >= BUDGET_LIMIT
+                    ? '⚠️ Budget Exceeded!'
+                    : currentMonthExpense >= BUDGET_LIMIT * 0.8
+                    ? '⚡ Approaching Budget Limit'
+                    : 'Monthly Budget'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-bold ${
+                  currentMonthExpense >= BUDGET_LIMIT ? 'text-red-400'
+                  : currentMonthExpense >= BUDGET_LIMIT * 0.8 ? 'text-yellow-400'
+                  : 'text-zinc-400'
+                }`}>
+                  ₹ {currentMonthExpense.toLocaleString()} / ₹ {BUDGET_LIMIT.toLocaleString()}
+                </span>
+                {currentMonthExpense >= BUDGET_LIMIT && (
+                  <button onClick={dismissBudgetAlert} className="text-red-400 hover:text-red-200 transition-colors">
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="w-full bg-zinc-800 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full transition-all duration-700 ${
+                  currentMonthExpense >= BUDGET_LIMIT ? 'bg-red-500'
+                  : currentMonthExpense >= BUDGET_LIMIT * 0.8 ? 'bg-yellow-500'
+                  : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min(budgetUsedPercent, 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-2 text-xs text-zinc-500">
+              <span>{budgetUsedPercent.toFixed(0)}% used this month</span>
+              <span>{budgetRemaining > 0 ? `₹ ${budgetRemaining.toLocaleString()} remaining` : `₹ ${Math.abs(budgetRemaining).toLocaleString()} over budget`}</span>
+            </div>
+          </div>
+        )}
+
         {/* Corpus Fund Bar — corpus page only */}
         {activePage === 'corpus' && (
           <div className={`${panel} p-5 mb-6 ${
@@ -1126,9 +1210,7 @@ export default function FinanceApp() {
                   const matchesType = activePage !== 'home' || dashboardTypeFilter === 'all' || t.type === dashboardTypeFilter
                   // Hide electricity from dashboard home merged view
                   const hideElec = activePage === 'home' && dashboardMergeByFlat && t.category?.toLowerCase().includes('electricity')
-                  // When merged by flat, only show income
-                  const hideExpenseWhenMerged = activePage === 'home' && dashboardMergeByFlat && t.type === 'expense'
-                  return matchesSearch && matchesMonth && matchesType && !hideElec && !hideExpenseWhenMerged
+                  return matchesSearch && matchesMonth && matchesType && !hideElec
                 })
 
                 // Merge by flat (home page only)
